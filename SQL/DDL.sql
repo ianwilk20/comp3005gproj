@@ -1,56 +1,50 @@
--- DDL Statements --
+-- DDL Statements (UPDATED) --
 
 create table Publisher
-(bank_account serial,
+(bank_account bigint check (bank_account > 0) not null unique,
  pub_name varchar(50) not null,
  email varchar(50) not null,
- primary key(bank_account),
- unique(bank_account)
+ primary key(bank_account)
 );
 
 create table Phone_Number
-(number varchar(15) not null,
- primary key(number),
- unique (number)
+(p_number numeric(10, 0) not null unique,
+ primary key(p_number)
 );
 
 create table Pub_phone
-(number varchar(15) not null,
- bank_account serial,
- primary key(number),
+(p_number numeric(10, 0) not null,
+ bank_account bigint,
+ primary key(p_number),
  foreign key(bank_account) references Publisher(bank_account) on delete cascade,
- foreign key(number) references Phone_Number(number) on delete cascade
+ foreign key(p_number) references Phone_Number(p_number) on delete cascade
 );
 
 create table Book
-(serial_no serial,
- ISBN serial,
+(serial_no serial check (serial_no > 0) not null unique,
+ ISBN bigint check (ISBN > 0) not null unique,
  sold boolean default false,
- primary key (serial_no),
- unique(serial_no),
- unique (ISBN)
+ primary key (serial_no)
 );
 
 create table Book_ISBN
-(bank_account serial,
- ISBN serial,
+(bank_account serial not null,
+ ISBN bigint check (ISBN > 0) not null unique,
  book_name varchar(100) not null,
  genre varchar(20),
  no_pages int check (no_pages >= 0) default 0,
- cost_price numeric(5,2) check (cost_price >= 0) default 0,
- sales_price numeric(5,2) check (sales_price >=0) default 0,
+ cost_price numeric(7,2) check (cost_price >= 0) default 0,
+ sales_price numeric(7,2) check (sales_price >=0) default 0,
  percent_to_pub numeric(5,2) check (percent_to_pub >= 0) default 0,
  primary key (bank_account, ISBN),
- unique(ISBN),
  foreign key (ISBN) references Book(ISBN) on delete cascade,
  foreign key (bank_account) references Publisher(bank_account) on delete cascade
 );
 
 create table Author
-(author_id serial,
+(author_id serial unique,
  author_name varchar(40) not null,
- primary key (author_id),
- unique (author_id)
+ primary key (author_id)
 );
 
 create table Book_author
@@ -62,11 +56,10 @@ create table Book_author
 );
 
 create table Users
-(account_no serial,
+(account_no serial unique,
  user_name varchar(50) not null,
  email varchar(50) not null,
- primary key (account_no),
- unique (account_no)
+ primary key (account_no)
 );
 
 create table Checkout
@@ -78,11 +71,10 @@ create table Checkout
 );
 
 create table Owners
-(owner_id serial,
+(owner_id serial unique,
  email varchar(50) not null,
  threshold int check (threshold >= 0),
- primary key (owner_id),
- unique (owner_id)
+ primary key (owner_id)
 );
 
 create table Inventory
@@ -102,20 +94,19 @@ create table Owners_book
 );
 
 create table Owners_Phone
-(number varchar(15) not null,
+(p_number numeric(10, 0) not null,
  owner_id serial,
- primary key (number),
- foreign key (number) references Phone_Number(number) on delete cascade,
+ primary key (p_number),
+ foreign key (p_number) references Phone_Number(p_number) on delete cascade,
  foreign key (owner_id) references Owners(owner_id) on delete cascade
 );
 
 create table Orders
-(order_no serial,
+(order_no serial unique,
  serial_no serial,
  order_status varchar(30) not null,
  purchase_date timestamp,
  primary key (order_no, serial_no),
- unique (order_no),
  foreign key (serial_no) references Book(serial_no) on delete cascade
 );
 
@@ -128,10 +119,10 @@ create table Users_book
 );
 
 create table Users_Phone
-(number varchar(15) not null,
+(p_number numeric(10, 0) not null,
  account_no serial,
- primary key (number),
- foreign key (number) references Phone_Number(number) on delete cascade,
+ primary key (p_number),
+ foreign key (p_number) references Phone_Number(p_number) on delete cascade,
  foreign key (account_no) references Users(account_no) on delete cascade
 );
 
@@ -144,9 +135,9 @@ create table Users_orders
 );
 
 create table Address
-(postal_code varchar(6) not null,
- street varchar(20) not null,
- city varchar(50) not null,
+(postal_code varchar(6) not null unique,
+ street varchar(20) not null unique,
+ city varchar(50) not null unique,
  primary key (postal_code, street, city)
 );
 
