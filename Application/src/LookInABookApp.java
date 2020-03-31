@@ -7,7 +7,7 @@ public class LookInABookApp {
         //PostgreSqlExample.forName("com.example.jdbc.Driver");
         String url = "jdbc:postgresql://localhost:5432/OnlineBookstore";
         String user = "postgres";
-        String password = "rootPass";
+        String password = "Whale987654";
 
         Connection c = null;
       try {

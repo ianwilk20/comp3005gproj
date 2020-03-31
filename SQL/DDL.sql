@@ -85,14 +85,6 @@ create table Inventory
  foreign key (owner_id) references Owners(owner_id) on delete cascade
 );
 
-create table Owners_Book
-(serial_no serial,
- owner_id serial,
- primary key (serial_no),
- foreign key (serial_no) references Book(serial_no) on delete cascade,
- foreign key (owner_id) references Owners(owner_id) on delete cascade
-);
-
 create table Owners_Phone
 (p_number numeric(10, 0) not null,
  owner_id serial,
@@ -147,14 +139,6 @@ create table Postal_Address
  country varchar(20) not null check (country='Canada'),
  primary key (postal_code),
  foreign key (postal_code) references Address(postal_code) on delete cascade
-);
-
-create table Owners_Orders
-(order_no serial,
- owner_id serial,
- primary key (order_no),
- foreign key (order_no) references Orders(order_no) on delete cascade,
- foreign key (owner_id) references Owners(owner_id) on delete cascade
 );
 
 create table Users_Shipping
