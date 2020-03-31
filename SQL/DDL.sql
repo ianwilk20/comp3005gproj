@@ -12,7 +12,7 @@ create table Phone_Number
  primary key(p_number)
 );
 
-create table Pub_phone
+create table Pub_Phone
 (p_number numeric(10, 0) not null,
  bank_account bigint,
  primary key(p_number),
@@ -47,7 +47,7 @@ create table Author
  primary key (author_id)
 );
 
-create table Book_author
+create table Book_Author
 (author_id serial,
  serial_no serial,
  primary key (author_id, serial_no),
@@ -85,7 +85,7 @@ create table Inventory
  foreign key (owner_id) references Owners(owner_id) on delete cascade
 );
 
-create table Owners_book
+create table Owners_Book
 (serial_no serial,
  owner_id serial,
  primary key (serial_no),
@@ -110,7 +110,7 @@ create table Orders
  foreign key (serial_no) references Book(serial_no) on delete cascade
 );
 
-create table Users_book
+create table Users_Book
 (serial_no serial,
  account_no serial,
  primary key (serial_no),
@@ -126,7 +126,7 @@ create table Users_Phone
  foreign key (account_no) references Users(account_no) on delete cascade
 );
 
-create table Users_orders
+create table Users_Orders
 (order_no serial,
  account_no serial,
  primary key (order_no),
@@ -141,7 +141,7 @@ create table Address
  primary key (postal_code, street, city)
 );
 
-create table Postal_address
+create table Postal_Address
 (postal_code varchar(6) not null,
  province varchar(35) not null,
  country varchar(20) not null check (country='Canada'),
@@ -149,7 +149,7 @@ create table Postal_address
  foreign key (postal_code) references Address(postal_code) on delete cascade
 );
 
-create table Owners_orders
+create table Owners_Orders
 (order_no serial,
  owner_id serial,
  primary key (order_no),
