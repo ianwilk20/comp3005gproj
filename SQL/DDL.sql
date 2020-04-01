@@ -20,13 +20,6 @@ create table Pub_Phone
  foreign key(p_number) references Phone_Number(p_number) on delete cascade
 );
 
-create table Book
-(serial_no serial check (serial_no > 0) not null unique,
- ISBN bigint check (ISBN > 0) not null unique,
- sold boolean default false,
- primary key (serial_no)
-);
-
 create table Book_ISBN
 (bank_account serial not null,
  ISBN bigint check (ISBN > 0) not null unique,
@@ -37,8 +30,15 @@ create table Book_ISBN
  sales_price numeric(7,2) check (sales_price >=0) default 0,
  percent_to_pub numeric(5,2) check (percent_to_pub >= 0) default 0,
  primary key (bank_account, ISBN),
- foreign key (ISBN) references Book(ISBN) on delete cascade,
  foreign key (bank_account) references Publisher(bank_account) on delete cascade
+);
+
+create table Book
+(serial_no serial check (serial_no > 0) not null unique,
+ ISBN bigint check (ISBN > 0) not null,
+ sold boolean default false,
+ primary key (serial_no),
+ foreign key (ISBN) references Book_ISBN(ISBN) on delete cascade
 );
 
 create table Author
