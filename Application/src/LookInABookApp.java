@@ -4,7 +4,6 @@ import java.util.*;
 public class LookInABookApp {
 
     public static void main(String[] args) {
-        //PostgreSqlExample.forName("com.example.jdbc.Driver");
         String url = "jdbc:postgresql://localhost:5432/OnlineBookstore";
         String user = "postgres";
         String password = "rootPass";
@@ -35,7 +34,7 @@ public class LookInABookApp {
 
             if (role == 1){ //User
                 uoLoop = false;
-                userLoginLoop(c);
+                userLoop(c);
             } else if (role == 2){ //Owner
                 uoLoop = false;
                 ownerLoginLoop(c);
@@ -46,6 +45,10 @@ public class LookInABookApp {
         }
     }
 
+    /**
+     * Used to authenticate user at checkout
+     * @param c
+     */
     private static void userLoginLoop(Connection c) {
         System.out.println("--------------------------------------------------");
         System.out.print("Would you like to Login or Create and Account?\n\nPress (1) to Login \t\t Press (2) to Create an Account\n\n \t\t Selection: ");
@@ -90,10 +93,19 @@ public class LookInABookApp {
         }
     }
 
+
+    /**
+     * Used to authenticate owner at login
+     * @param c
+     */
     private static void ownerLoginLoop(Connection c) {
         System.out.println("In Owner Loop");
     }
 
+    /**
+     * The User Book Search Loop
+     * @param c
+     */
     private static void userLoop(Connection c) {
         Scanner uInput = new Scanner(System.in);
         System.out.println("\n--------------------------------------------------");
