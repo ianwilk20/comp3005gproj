@@ -21,7 +21,7 @@ create table Pub_Phone
 );
 
 create table Book_ISBN
-(bank_account serial not null,
+(bank_account bigint not null,
  ISBN bigint check (ISBN > 0) not null unique,
  book_name varchar(100) not null,
  genre varchar(20),
@@ -192,7 +192,7 @@ create table Orders_Billing
 );
 
 create table Pub_Address
-(bank_account serial,
+(bank_account bigint,
  postal_code varchar(6) not null,
  street varchar(20) not null,
  city varchar(50) not null,
