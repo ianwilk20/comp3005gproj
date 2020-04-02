@@ -1,3 +1,5 @@
+import java.math.BigDecimal;
+import java.math.BigInteger;
 import java.sql.*;
 import java.util.*;
  
@@ -94,7 +96,7 @@ public class LookInABookApp {
             String user_name = uInput.nextLine();
 
             System.out.println("--------------------------------------------------");
-            System.out.println("Please enter an email to associate to the user_name: ");
+            System.out.print("Please enter an email to associate to the user_name: ");
             String email = uInput.nextLine();
 
             if (user_name.isEmpty() || user_name == null || email.isEmpty() || email == null){
@@ -102,6 +104,7 @@ public class LookInABookApp {
                 continue;
             } else {
                 insertUserIntoDB(user_name, email);
+                getUserWithEmail(email); //So we store the users account number
                 System.out.println("--------------------------------------------------\n");
                 //System.out.println("Please wait while we redirect you to login");
                 return;
@@ -117,7 +120,7 @@ public class LookInABookApp {
         while (true){
             System.out.println("| -------  User Billing Information ------- |");
             System.out.print("Enter your street address: ");
-            String address = uInput.nextLine();
+            String street = uInput.nextLine();
             System.out.print("Enter your city: ");
             String city = uInput.nextLine();
             System.out.print("Enter your postal code: ");
@@ -126,19 +129,19 @@ public class LookInABookApp {
             String province = uInput.nextLine();
             System.out.print("Enter your country: ");
             String country = uInput.nextLine();
-            uInput = new Scanner(System.in);
             System.out.print("Enter your credit card number: ");
-            Integer creditCard = uInput.nextInt();
+            BigInteger creditCard = uInput.nextBigInteger();
 
 
-            if (address.isEmpty() || address == null || city.isEmpty() || city == null || postal_code.isEmpty() || postal_code == null ||
+            if (street.isEmpty() || street == null || city.isEmpty() || city == null || postal_code.isEmpty() || postal_code == null ||
                 province.isEmpty() || province == null || country.isEmpty() || country == null || creditCard == null) {
                 System.out.println("Invalid entry or entire(s) please try again!");
                 continue;
             } else {
-                boolean result = insertUserBillingIntoDB(address, city, postal_code, province, country, creditCard);
+                int result = insertIntoAddressAndPostalAddress(street, city, postal_code, province, country);
+                result = insertUserBillingIntoDB(street, city, postal_code, province, country, creditCard);
                 System.out.println("--------------------------------------------------\n");
-                if (result == false){
+                if (result == 0){
                     System.out.println("Please try again.");
                     createUserBilling();
                 }
@@ -316,7 +319,7 @@ public class LookInABookApp {
             PreparedStatement pstmt = c.prepareStatement(query);
             pstmt.setString(1, user_name);
             pstmt.setString(2, email);
-            boolean results = pstmt.execute();
+            int results = pstmt.executeUpdate();
         } catch (SQLException e) {
             e.printStackTrace();
         }
@@ -333,22 +336,22 @@ public class LookInABookApp {
      * @param creditCard
      * @return
      */
-    private static boolean insertUserBillingIntoDB(String street, String city, String postal_code, String province, String country, Integer creditCard) {
+    private static int insertUserBillingIntoDB(String street, String city, String postal_code, String province, String country, BigInteger creditCard) {
         String billingQuery = "INSERT into users_billing (account_no, postal_code, street, city, credit_card) values (?, ?, ?, ?, ?)";
-        boolean results = false;
+        //BigDecimal bigDecId = new BigDecimal(creditCard);
+        int results = 0;
         try {
             PreparedStatement pstmt = c.prepareStatement(billingQuery);
             pstmt.setInt(1, userAccountNumber);
             pstmt.setString(2, postal_code);
             pstmt.setString(3, street);
             pstmt.setString(4, city);
-            pstmt.setInt(5, creditCard);
-            results = pstmt.execute();
+            pstmt.setObject(5, creditCard);
+            results = pstmt.executeUpdate();
         } catch (SQLException e) {
             e.printStackTrace();
         }
 
-        results = insertIntoAddressAndPostalAddress(city, street, postal_code, province, country);
         return results;
     }
 
@@ -361,16 +364,16 @@ public class LookInABookApp {
      * @param country
      * @return
      */
-    private static boolean insertUserShippingIntoDB(String street, String city, String postal_code, String province, String country) {
+    private static int insertUserShippingIntoDB(String street, String city, String postal_code, String province, String country) {
         String billingQuery = "INSERT into users_shipping (account_no, postal_code, street, city) values (?, ?, ?, ?)";
-        boolean results = false;
+        int results = 0;
         try {
             PreparedStatement pstmt = c.prepareStatement(billingQuery);
             pstmt.setInt(1, userAccountNumber);
             pstmt.setString(2, postal_code);
             pstmt.setString(3, street);
             pstmt.setString(4, city);
-            results = pstmt.execute();
+            results = pstmt.executeUpdate();
         } catch (SQLException e) {
             e.printStackTrace();
         }
@@ -388,16 +391,16 @@ public class LookInABookApp {
      * @param country
      * @return
      */
-    private static boolean insertIntoAddressAndPostalAddress(String street, String city, String postal_code, String province, String country){
+    private static int insertIntoAddressAndPostalAddress(String street, String city, String postal_code, String province, String country){
         String addressQuery = "INSERT into address (postal_code, street, city) values (?, ?, ?)";
         String postalAddressQuery = "INSERT into postal_address (postal_code, province, country) values (?, ?, ?)";
-        boolean results = false;
+        int results = 0;
         try {
             PreparedStatement pstmt = c.prepareStatement(addressQuery);
             pstmt.setString(1, postal_code);
             pstmt.setString(2, street);
             pstmt.setString(3, city);
-            results = pstmt.execute();
+            results = pstmt.executeUpdate();
         } catch (SQLException e) {
             e.printStackTrace();
         }
@@ -407,7 +410,7 @@ public class LookInABookApp {
             pstmt.setString(1, postal_code);
             pstmt.setString(2, province);
             pstmt.setString(3, country);
-            results = pstmt.execute();
+            results = pstmt.executeUpdate();
         } catch (SQLException e) {
             e.printStackTrace();
         }
@@ -424,7 +427,7 @@ public class LookInABookApp {
             PreparedStatement pstmt = c.prepareStatement(query);
             pstmt.setInt(1, userAccountNumber);
             pstmt.setInt(2, userAccountNumber);
-            boolean results = pstmt.execute();
+            int results = pstmt.executeUpdate();
         } catch (SQLException e) {
             e.printStackTrace();
         }
