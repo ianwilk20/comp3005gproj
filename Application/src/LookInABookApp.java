@@ -287,12 +287,12 @@ public class LookInABookApp {
         try {
             PreparedStatement pstmt = c.prepareStatement(bookTable);
             pstmt.setInt(1, serial_no);
-            pstmt.execute();
+            pstmt.executeUpdate();
 
             PreparedStatement prstmt = c.prepareStatement(inventoryTable);
             prstmt.setInt(1, serial_no);
             prstmt.setInt(2, owner_id);
-            prstmt.execute();
+            prstmt.executeUpdate();
         } catch (SQLException e) {
             e.printStackTrace();
         }
@@ -336,17 +336,17 @@ public class LookInABookApp {
             PreparedStatement pstmt = c.prepareStatement(ownersTable);
             pstmt.setString(1, email);
             pstmt.setInt(2, threshold);
-            pstmt.execute();
+            pstmt.executeUpdate();
             int owner_id = getOwnerWithEmail(c, email);
 
             PreparedStatement prstmt = c.prepareStatement(phoneNumberTable);
             prstmt.setLong(1, p_number);
-            prstmt.execute();
+            prstmt.executeUpdate();
 
             PreparedStatement prestmt = c.prepareStatement(ownersPhoneTable);
             prestmt.setLong(1, p_number);
             prestmt.setInt(2, owner_id);
-            prestmt.execute();
+            prestmt.executeUpdate();
 
             return owner_id;
         } catch (SQLException e) {
