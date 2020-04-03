@@ -126,19 +126,19 @@ create table Users_Orders
  foreign key (account_no) references Users(account_no) on delete cascade
 );
 
-create table Address
-(postal_code varchar(6) not null unique,
- street varchar(20) not null unique,
- city varchar(50) not null unique,
- primary key (postal_code, street, city)
-);
-
 create table Postal_Address
 (postal_code varchar(6) not null,
  province varchar(35) not null,
  country varchar(20) not null check (country='Canada'),
- primary key (postal_code),
- foreign key (postal_code) references Address(postal_code) on delete cascade
+ primary key (postal_code)
+);
+
+create table Address
+(postal_code varchar(6) not null,
+ street varchar(20) not null,
+ city varchar(50) not null,
+ primary key (postal_code, street, city),
+ foreign key (postal_code) references Postal_Address(postal_code)
 );
 
 create table Users_Shipping
@@ -148,9 +148,7 @@ create table Users_Shipping
  city varchar(50) not null,
  primary key (account_no),
  foreign key (account_no) references Users(account_no) on delete cascade,
- foreign key (postal_code) references Address(postal_code) on delete cascade,
- foreign key (street) references Address(street) on delete cascade,
- foreign key (city) references Address(city) on delete cascade
+ foreign key (postal_code) references Postal_Address(postal_code) on delete cascade
 );
 
 create table Orders_Shipping
@@ -160,9 +158,7 @@ create table Orders_Shipping
  city varchar(50) not null,
  primary key (order_no),
  foreign key (order_no) references Orders(order_no) on delete cascade,
- foreign key (postal_code) references Address(postal_code) on delete cascade,
- foreign key (street) references Address(street) on delete cascade,
- foreign key (city) references Address(city) on delete cascade
+ foreign key (postal_code) references Postal_Address(postal_code) on delete cascade
 );
 
 create table Users_Billing
@@ -173,9 +169,7 @@ create table Users_Billing
  credit_card bigint not null,
  primary key (account_no),
  foreign key (account_no) references Users(account_no) on delete cascade,
- foreign key (postal_code) references Address(postal_code) on delete cascade,
- foreign key (street) references Address(street) on delete cascade,
- foreign key (city) references Address(city) on delete cascade
+ foreign key (postal_code) references Postal_Address(postal_code) on delete cascade
 );
 
 create table Orders_Billing
@@ -186,9 +180,7 @@ create table Orders_Billing
  credit_card bigint not null,
  primary key (order_no),
  foreign key (order_no) references Orders(order_no) on delete cascade,
- foreign key (postal_code) references Address(postal_code) on delete cascade,
- foreign key (street) references Address(street) on delete cascade,
- foreign key (city) references Address(city) on delete cascade
+ foreign key (postal_code) references Postal_Address(postal_code) on delete cascade
 );
 
 create table Pub_Address
@@ -198,7 +190,5 @@ create table Pub_Address
  city varchar(50) not null,
  primary key (bank_account),
  foreign key (bank_account) references Publisher(bank_account) on delete cascade,
- foreign key (postal_code) references Address(postal_code) on delete cascade,
- foreign key (street) references Address(street) on delete cascade,
- foreign key (city) references Address(city) on delete cascade
+ foreign key (postal_code) references Postal_Address(postal_code) on delete cascade
 );

@@ -49,6 +49,33 @@ public class LookInABookApp {
     }
 
     /**
+     * Creates the user entry in table
+     */
+    private static void createUserAccount(){
+        Scanner uInput = new Scanner(System.in);
+        while (true){
+            System.out.println("--------------------------------------------------");
+            System.out.print("Please enter a username to create: ");
+            String user_name = uInput.nextLine();
+
+            System.out.println("--------------------------------------------------");
+            System.out.print("Please enter an email to associate to the user_name: ");
+            String email = uInput.nextLine();
+
+            if (user_name.isEmpty() || user_name == null || email.isEmpty() || email == null){
+                System.out.println("Invalid user_name or email please try again!");
+                continue;
+            } else {
+                insertUserIntoDB(user_name, email);
+                getUserWithEmail(email); //So we store the users account number
+                System.out.println("--------------------------------------------------\n");
+                //System.out.println("Please wait while we redirect you to login");
+                return;
+            }
+        }
+    }
+
+    /**
      * Used to authenticate user at checkout
      */
     private static void userLoginLoop() {
@@ -82,33 +109,9 @@ public class LookInABookApp {
 
             //Get User Shipping
             createUserShipping();
-        }
-    }
 
-    /**
-     * Creates the user entry in table
-     */
-    private static void createUserAccount(){
-        Scanner uInput = new Scanner(System.in);
-        while (true){
-            System.out.println("--------------------------------------------------");
-            System.out.print("Please enter a username to create: ");
-            String user_name = uInput.nextLine();
-
-            System.out.println("--------------------------------------------------");
-            System.out.print("Please enter an email to associate to the user_name: ");
-            String email = uInput.nextLine();
-
-            if (user_name.isEmpty() || user_name == null || email.isEmpty() || email == null){
-                System.out.println("Invalid user_name or email please try again!");
-                continue;
-            } else {
-                insertUserIntoDB(user_name, email);
-                getUserWithEmail(email); //So we store the users account number
-                System.out.println("--------------------------------------------------\n");
-                //System.out.println("Please wait while we redirect you to login");
-                return;
-            }
+            //return to login
+            userLoginLoop();
         }
     }
 
@@ -138,10 +141,10 @@ public class LookInABookApp {
                 System.out.println("Invalid entry or entire(s) please try again!");
                 continue;
             } else {
-                int result = insertIntoAddressAndPostalAddress(street, city, postal_code, province, country);
-                result = insertUserBillingIntoDB(street, city, postal_code, province, country, creditCard);
+                //int result = insertIntoAddressAndPostalAddress(street, city, postal_code, province, country);
+                boolean result = insertUserBillingIntoDB(street, city, postal_code, creditCard, province, country);
                 System.out.println("--------------------------------------------------\n");
-                if (result == 0){
+                if (result == false){
                     System.out.println("Please try again.");
                     createUserBilling();
                 }
@@ -151,6 +154,9 @@ public class LookInABookApp {
 
     }
 
+    /**
+     * Creates the users shipping information
+     */
     private static void createUserShipping(){
         Scanner uInput = new Scanner(System.in);
         while (true) {
@@ -178,12 +184,17 @@ public class LookInABookApp {
              String country = uInput.nextLine();
 
              if (address.isEmpty() || address == null || city.isEmpty() || city == null || postal_code.isEmpty() || postal_code == null ||
-                     province.isEmpty() || province == null || country.isEmpty() || country == null) {
+                     province.isEmpty() || province == null || country.isEmpty() || country == null || !country.equals("Canada")) {
                  System.out.println("Invalid entry or entirie(s) please try again!");
                  continue;
              } else {
-                 insertUserShippingIntoDB(address, city, postal_code, province, country);
+                 boolean result = insertUserShippingIntoDB(address, city, postal_code, province, country);
                  System.out.println("--------------------------------------------------\n");
+                 if (result == false){
+                     System.out.println("Please try again.");
+                     createUserShipping();
+                 }
+                 System.out.println("Account Successfully Created! Please Login.\n");
                  return;
              }
          }
@@ -201,7 +212,9 @@ public class LookInABookApp {
      */
     private static void userLoop() {
         Scanner uInput = new Scanner(System.in);
-        System.out.println("\n--------------------------------------------------");
+        System.out.println("--------------------------------------------------");
+        //orderSearch();
+        //bookSearch();
         System.out.println("How would you like to search for your book?");
         System.out.print(" (1) - Book Name \t (2) - Author Name \t (3) - ISBN \t (4) - Genre");
         Integer selection = uInput.nextInt();
@@ -331,28 +344,32 @@ public class LookInABookApp {
      * @param street
      * @param city
      * @param postal_code
-     * @param province
-     * @param country
      * @param creditCard
      * @return
      */
-    private static int insertUserBillingIntoDB(String street, String city, String postal_code, String province, String country, BigInteger creditCard) {
-        String billingQuery = "INSERT into users_billing (account_no, postal_code, street, city, credit_card) values (?, ?, ?, ?, ?)";
-        //BigDecimal bigDecId = new BigDecimal(creditCard);
-        int results = 0;
+    private static boolean insertUserBillingIntoDB(String street, String city, String postal_code, BigInteger creditCard, String province, String country) {
+        String billingQuery = "SELECT \"insert_users_billing\" (?, ?, ?, ?, ?, ?, ?)";
+        ResultSet results = null;
+        String u_AN = Integer.toString(userAccountNumber);
+        String c_c = creditCard.toString();
         try {
             PreparedStatement pstmt = c.prepareStatement(billingQuery);
-            pstmt.setInt(1, userAccountNumber);
+            pstmt.setLong(1, Long.parseLong(u_AN));
             pstmt.setString(2, postal_code);
             pstmt.setString(3, street);
             pstmt.setString(4, city);
-            pstmt.setObject(5, creditCard);
-            results = pstmt.executeUpdate();
+            pstmt.setLong(5, Long.parseLong(c_c));
+            pstmt.setString(6, province);
+            pstmt.setString(7, country);
+            results = pstmt.executeQuery();
+            if (results != null) {
+                 return true;
+            }
+            return false;
         } catch (SQLException e) {
             e.printStackTrace();
+            return false;
         }
-
-        return results;
     }
 
     /**
@@ -364,22 +381,27 @@ public class LookInABookApp {
      * @param country
      * @return
      */
-    private static int insertUserShippingIntoDB(String street, String city, String postal_code, String province, String country) {
-        String billingQuery = "INSERT into users_shipping (account_no, postal_code, street, city) values (?, ?, ?, ?)";
-        int results = 0;
+    private static boolean insertUserShippingIntoDB(String street, String city, String postal_code, String province, String country) {
+        String shippingQuery = "SELECT \"insert_users_shipping\" (?, ?, ?, ?, ?, ?)";
+        ResultSet results = null;
+        String u_AN = Integer.toString(userAccountNumber);
         try {
-            PreparedStatement pstmt = c.prepareStatement(billingQuery);
-            pstmt.setInt(1, userAccountNumber);
+            PreparedStatement pstmt = c.prepareStatement(shippingQuery);
+            pstmt.setLong(1, Long.parseLong(u_AN));
             pstmt.setString(2, postal_code);
             pstmt.setString(3, street);
             pstmt.setString(4, city);
-            results = pstmt.executeUpdate();
+            pstmt.setString(5, province);
+            pstmt.setString(6, country);
+            results = pstmt.executeQuery();
+            if (results != null) {
+                return true;
+            }
+            return false;
         } catch (SQLException e) {
             e.printStackTrace();
+            return false;
         }
-
-        results = insertIntoAddressAndPostalAddress(city, street, postal_code, province, country);
-        return results;
     }
 
     /**
@@ -396,16 +418,6 @@ public class LookInABookApp {
         String postalAddressQuery = "INSERT into postal_address (postal_code, province, country) values (?, ?, ?)";
         int results = 0;
         try {
-            PreparedStatement pstmt = c.prepareStatement(addressQuery);
-            pstmt.setString(1, postal_code);
-            pstmt.setString(2, street);
-            pstmt.setString(3, city);
-            results = pstmt.executeUpdate();
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
-
-        try {
             PreparedStatement pstmt = c.prepareStatement(postalAddressQuery);
             pstmt.setString(1, postal_code);
             pstmt.setString(2, province);
@@ -413,6 +425,18 @@ public class LookInABookApp {
             results = pstmt.executeUpdate();
         } catch (SQLException e) {
             e.printStackTrace();
+            createUserBilling();
+        }
+
+        try {
+            PreparedStatement pstmt = c.prepareStatement(addressQuery);
+            pstmt.setString(1, postal_code);
+            pstmt.setString(2, street);
+            pstmt.setString(3, city);
+            results = pstmt.executeUpdate();
+        } catch (SQLException e) {
+            e.printStackTrace();
+            createUserBilling();
         }
         return results;
     }
@@ -428,8 +452,12 @@ public class LookInABookApp {
             pstmt.setInt(1, userAccountNumber);
             pstmt.setInt(2, userAccountNumber);
             int results = pstmt.executeUpdate();
+            return;
         } catch (SQLException e) {
+            System.out.println("Failed to insert information from Users_Billing to Users_Shipping");
             e.printStackTrace();
+            createUserShipping();
+
         }
     }
 }
