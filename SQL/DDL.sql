@@ -135,7 +135,7 @@ create table Postal_Address
 
 create table Address
 (postal_code varchar(6) not null,
- street varchar(20) not null,
+ street varchar(50) not null,
  city varchar(50) not null,
  primary key (postal_code, street, city),
  foreign key (postal_code) references Postal_Address(postal_code)
@@ -144,7 +144,7 @@ create table Address
 create table Users_Shipping
 (account_no serial,
  postal_code varchar(6) not null,
- street varchar(20) not null,
+ street varchar(50) not null,
  city varchar(50) not null,
  primary key (account_no),
  foreign key (account_no) references Users(account_no) on delete cascade,
@@ -154,7 +154,7 @@ create table Users_Shipping
 create table Orders_Shipping
 (order_no serial,
  postal_code varchar(6) not null,
- street varchar(20) not null,
+ street varchar(50) not null,
  city varchar(50) not null,
  primary key (order_no),
  foreign key (order_no) references Orders(order_no) on delete cascade,
@@ -164,7 +164,7 @@ create table Orders_Shipping
 create table Users_Billing
 (account_no serial,
  postal_code varchar(6) not null,
- street varchar(20) not null,
+ street varchar(50) not null,
  city varchar(50) not null,
  credit_card bigint not null,
  primary key (account_no),
@@ -175,7 +175,7 @@ create table Users_Billing
 create table Orders_Billing
 (order_no serial,
  postal_code varchar(6) not null,
- street varchar(20) not null,
+ street varchar(50) not null,
  city varchar(50) not null,
  credit_card bigint not null,
  primary key (order_no),
@@ -186,7 +186,7 @@ create table Orders_Billing
 create table Pub_Address
 (bank_account bigint,
  postal_code varchar(6) not null,
- street varchar(20) not null,
+ street varchar(50) not null,
  city varchar(50) not null,
  primary key (bank_account),
  foreign key (bank_account) references Publisher(bank_account) on delete cascade,
