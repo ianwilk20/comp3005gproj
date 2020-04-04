@@ -1,5 +1,6 @@
 import java.math.BigDecimal;
 import java.math.BigInteger;
+import javafx.util.Pair;
 import java.sql.*;
 import java.util.*;
  
@@ -11,7 +12,7 @@ public class LookInABookApp {
     public static void main(String[] args) {
         String url = "jdbc:postgresql://localhost:5432/OnlineBookstore";
         String user = "postgres";
-        String password = "rootPass";
+        String password = "Whale987654";
 
       try {
          Class.forName("org.postgresql.Driver");
@@ -198,13 +199,6 @@ public class LookInABookApp {
                  return;
              }
          }
-    }
-
-    /**
-     * Used to authenticate owner at login
-     */
-    private static void ownerLoginLoop() {
-        System.out.println("In Owner Loop");
     }
 
     /**
@@ -516,5 +510,616 @@ public class LookInABookApp {
             e.printStackTrace();
         }
         return "Not Found";
+    }
+
+    private static void ownerLoginLoop() {
+        System.out.println("--------------------------------------------------");
+        System.out.print("Would you like to Login or Create an Account?\n\nPress (1) to Login \t\t Press (2) to Create an Account\n\n \t\t Selection: ");
+        Scanner uInput = new Scanner(System.in);
+        Integer role = uInput.nextInt();
+        if (role == 1) {
+            System.out.println("--------------------------------------------------");
+            System.out.print("Please enter your owner ID: ");
+            uInput = new Scanner(System.in);
+            Integer owner_id = uInput.nextInt();
+            Boolean ownerInDB = getOwnerWithOwnerID(owner_id);
+            if (ownerInDB) {
+                System.out.println("--------------------------------------------------");
+                System.out.println("Authenticated");
+                ownerLoop(owner_id);
+            } else {
+                System.out.println("--------------------------------------------------");
+                System.out.println("Owner ID not found!");
+                ownerLoginLoop();
+            }
+        } else if (role == 2) {
+            while (true) {
+                System.out.println("--------------------------------------------------");
+                System.out.println("Please enter an email to associate with your account: ");
+                uInput = new Scanner(System.in);
+                String email = uInput.nextLine();
+                System.out.println("--------------------------------------------------");
+                System.out.print("Please enter a phone number [0123456789] to associate with your account: ");
+                uInput = new Scanner(System.in);
+                long p_number = uInput.nextLong();
+                System.out.println("--------------------------------------------------");
+                System.out.print("Please enter a threshold to keep your collection stalked at: ");
+                uInput = new Scanner(System.in);
+                Integer threshold = uInput.nextInt();
+                if (threshold == null || threshold <= 0 || email.isEmpty() || email == null || p_number <= 0) {
+                    System.out.println("Invalid email or phone number or threshold please try again!");
+                    continue;
+                } else {
+                    int owner_id = addOwnerToDB(email, threshold, p_number);
+                    System.out.println("--------------------------------------------------\n");
+                    System.out.println("Please wait while we redirect you to login, your owner ID is: " + owner_id);
+                    ownerLoginLoop();
+                }
+            }
+        }
+    }
+
+    private static void ownerLoop(int owner_id) {
+        ArrayList<ArrayList<String>> inventory = getInventory(owner_id);
+        System.out.println("\n--------------------------------------------------");
+        printInventory(inventory);
+
+        Scanner uInput = new Scanner(System.in);
+        System.out.println("\n--------------------------------------------------");
+        System.out.print(" (1) - Add a Book to your Collection \n (2) - Remove a Book from your Collection \n" +
+                " (3) - View Publisher Details \n (4) - Generate a Report\n\n \t\t Selection: ");
+        Integer selection = uInput.nextInt();
+
+        switch (selection) {
+            case 1:
+                //add a book
+                int serial_no, no_pages;
+                Long ISBN, bank_account, p_number;
+                String author_name, book_name, genre, pub_name, email, street, city, province, country, postal_code;
+                float cost_price, sales_price, percent_to_pub;
+
+                System.out.print("Add Book with [Serial Number]: ");
+                uInput = new Scanner(System.in);
+                serial_no = uInput.nextInt();
+                System.out.print("What is the Author's name? ");
+                uInput = new Scanner(System.in);
+                author_name = uInput.nextLine();
+
+                System.out.print("Does another copy exist? (1) - yes (2) - no ");
+                uInput = new Scanner(System.in);
+                int response = uInput.nextInt();
+                switch (response){
+                    case 1:
+                        System.out.print("What is the book's name? ");
+                        uInput = new Scanner(System.in);
+                        book_name = uInput.nextLine();
+                        //insert Book + Inventory
+                        addBookToDB(serial_no, book_name, owner_id);
+                        break;
+                    case 2:
+                        System.out.println("Please enter all the book's information below.");
+                        System.out.print("ISBN: ");
+                        uInput = new Scanner(System.in);
+                        ISBN = uInput.nextLong();
+                        System.out.print("Book Name: ");
+                        uInput = new Scanner(System.in);
+                        book_name = uInput.nextLine();
+                        System.out.print("Genre ");
+                        uInput = new Scanner(System.in);
+                        genre = uInput.nextLine();
+                        System.out.print("Number of Pages: ");
+                        uInput = new Scanner(System.in);
+                        no_pages = uInput.nextInt();
+                        System.out.print("Cost Price: ");
+                        uInput = new Scanner(System.in);
+                        cost_price = uInput.nextFloat();
+                        System.out.print("Sales Price: ");
+                        uInput = new Scanner(System.in);
+                        sales_price = uInput.nextFloat();
+                        System.out.print("Percent to Publisher: ");
+                        uInput = new Scanner(System.in);
+                        percent_to_pub = uInput.nextFloat();
+
+                        System.out.print("Is the Publisher already in the Database? (1) - yes (2) - no ");
+                        uInput = new Scanner(System.in);
+                        response = uInput.nextInt();
+                        switch (response){
+                            case 1:
+                                System.out.print("What is the Publisher's name? ");
+                                uInput = new Scanner(System.in);
+                                pub_name = uInput.nextLine();
+                                //insert Book_ISBN - calls Book + Inventory fn
+                                addBook_ISBNToDB (ISBN, book_name, genre, no_pages, cost_price, sales_price, percent_to_pub, pub_name);
+                                addBookToDB(serial_no, book_name, owner_id);
+                                break;
+                            case 2:
+                                System.out.println("Please enter all the Publisher's information below.");
+                                System.out.print("Publisher Name: ");
+                                uInput = new Scanner(System.in);
+                                pub_name = uInput.nextLine();
+                                System.out.print("Email: ");
+                                uInput = new Scanner(System.in);
+                                email = uInput.nextLine();
+                                System.out.print("Bank Account Number: ");
+                                uInput = new Scanner(System.in);
+                                bank_account = uInput.nextLong();
+                                System.out.print("Phone Number: [0123456789]");
+                                uInput = new Scanner(System.in);
+                                p_number = uInput.nextLong();
+                                System.out.println("Please enter all the Publisher's Address' information below.");
+                                System.out.print("Street: ");
+                                uInput = new Scanner(System.in);
+                                street = uInput.nextLine();
+                                System.out.print("City: ");
+                                uInput = new Scanner(System.in);
+                                city = uInput.nextLine();
+                                System.out.print("Postal Code: [A1B2C3]");
+                                uInput = new Scanner(System.in);
+                                postal_code = uInput.nextLine();
+                                System.out.print("Province: ");
+                                uInput = new Scanner(System.in);
+                                province = uInput.nextLine();
+                                System.out.print("Country: [Canada]");
+                                uInput = new Scanner(System.in);
+                                country = uInput.nextLine();
+                                //insert Publisher + Phone_Number + Pub_Phone + Postal_Address + Address + Pub_Address - calls Book_ISBN
+                                addPublisherToDB(bank_account, pub_name, email, p_number, postal_code, province, country, street, city);
+                                addBook_ISBNToDB (ISBN, book_name, genre, no_pages, cost_price, sales_price, percent_to_pub, pub_name);
+                                addBookToDB(serial_no, book_name, owner_id);
+                                break;
+                        }
+                }
+                //insert Author(if you can) + Book_Author
+                addAuthorToDB(author_name, serial_no);
+                ownerLoop(owner_id);
+            case 2:
+                //remove a book
+                System.out.print("Remove Book with [Serial Number]: ");
+                serial_no = uInput.nextInt();
+                boolean exists = bookExists(owner_id, serial_no);
+                if (exists) {
+                    deleteBookBySerialNo(serial_no, owner_id);
+                } else {
+                    System.out.println("Your Inventory did not contain a book with " +
+                            serial_no + " as its serial number");
+                }
+                ownerLoop(owner_id);
+            case 3:
+                //publisher
+                System.out.print("Get Details about [Publisher Name]: ");
+                uInput = new Scanner(System.in);
+                pub_name = uInput.nextLine();
+                ArrayList<ArrayList<String>> pubDetails = getPublisherByName(owner_id, pub_name);
+                if (pubDetails.size() > 0) {
+                    System.out.println("\n--------------------------------------------------");
+                    System.out.printf("-%35s%50s%15s%90s%15s-\n", "Publisher Name", "Email Address", "Bank Account", "Address", "Phone #");
+                    for (int i = 0; i < pubDetails.size(); ++i) {
+                        if (i > 0) {
+                            System.out.printf(" %15s", pubDetails.get(i).get(4));
+
+                        } else {
+                            System.out.print("-");
+                            for (int j = 0; j < pubDetails.get(i).size(); ++j) {
+                                if (j == 0) {
+                                    System.out.printf("%35s", pubDetails.get(i).get(j));
+                                } else if (j == 1) {
+                                    System.out.printf("%50s", pubDetails.get(i).get(j));
+                                } else if (j == 2 || j == 4) {
+                                    System.out.printf("%15s", pubDetails.get(i).get(j));
+                                } else if (j == 3) {
+                                    System.out.printf("%90s", pubDetails.get(i).get(j));
+                                }
+                            }
+                        }
+                    }
+                    System.out.print("-\n");
+                } else {
+                    System.out.println("None of the books in your Inventory are published by " + pub_name);
+                }
+                ownerLoop(owner_id);
+            case 4:
+                //reports
+                System.out.println("Which report would you like to view?");
+                System.out.print(" (1) - Sales vs Expenditures \t (2) - Sales per Genre \t (3) - Sales per Author\n\n \t\t Selection:");
+                Integer sel = uInput.nextInt();
+                switch (sel) {
+                    case 1:
+                        //sales vs expenditures
+                        Pair<Pair<Float, Float>, Pair<ArrayList<ArrayList<String>>, ArrayList<ArrayList<String>>>> rv1 =
+                                generateSvsEReport(owner_id);
+                        String tot_sales = "$" + rv1.getKey().getKey();
+                        String tot_expenditures = "$" + rv1.getKey().getValue();
+                        ArrayList<ArrayList<String>> sold = rv1.getValue().getKey();
+                        ArrayList<ArrayList<String>> notSold = rv1.getValue().getValue();
+                        System.out.println("\n--------------------------------------------------");
+                        System.out.printf("-%20s%15s-\n", "Total Sales:", tot_sales);
+                        System.out.printf("-%20s%15s-\n\n", "Total Expenditures:", tot_expenditures);
+                        System.out.println("Sold:");
+                        printInventory(sold);
+                        System.out.println("Not Sold:");
+                        printInventory(notSold);
+                        ownerLoop(owner_id);
+                    case 2:
+                        //sales per genre
+                        Pair<ArrayList<Pair<String, Float>>, ArrayList<ArrayList<String>>> rv2 = generateSalesPerGenreReport(owner_id);
+                        ArrayList<Pair<String, Float>> tot_genres = rv2.getKey();
+                        ArrayList<ArrayList<String>> genres = rv2.getValue();
+                        System.out.println("\n--------------------------------------------------");
+                        System.out.printf("-%15s%15s-\n", "Genre", "Total Sales");
+                        for (int i = 0; i < tot_genres.size(); ++i) {
+                            System.out.printf("-%15s%15s-\n", tot_genres.get(i).getKey(), "$" + tot_genres.get(i).getValue());
+                        }
+                        System.out.println("Sold:");
+                        printInventory(genres);
+                        ownerLoop(owner_id);
+                    case 3:
+                        //sales per author
+                        Pair<ArrayList<Pair<String, Float>>, ArrayList<ArrayList<String>>> rv3 = generateSalesPerAuthorReport(owner_id);
+                        ArrayList<Pair<String, Float>> tot_authors = rv3.getKey();
+                        ArrayList<ArrayList<String>> authors = rv3.getValue();
+                        System.out.println("\n--------------------------------------------------");
+                        System.out.printf("-%20s%15s-\n", "Author", "Total Sales");
+                        for (int i = 0; i < tot_authors.size(); ++i) {
+                            System.out.printf("-%20s%15s-\n", tot_authors.get(i).getKey(), "$" + tot_authors.get(i).getValue());
+                        }
+                        System.out.println("Sold:");
+                        printInventory(authors);
+                        ownerLoop(owner_id);
+                    default:
+                        System.out.println("Invalid selction, please try again");
+                        ownerLoop(owner_id);
+                }
+                break;
+            default:
+                System.out.println("Invalid selction, please try again");
+                ownerLoop(owner_id);
+        }
+    }
+
+    private static boolean getOwnerWithOwnerID(Integer owner_id) {
+        String query = "SELECT count(owner_id) FROM Owners WHERE owner_id= ?";
+        try {
+            PreparedStatement pstmt = c.prepareStatement(query);
+            pstmt.setInt(1, owner_id);
+            ResultSet rs = pstmt.executeQuery();
+            rs.next();
+            int count = rs.getInt(1);
+            if (count > 0) {
+                return true;
+            } else {
+                return false;
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return false;
+    }
+
+    private static int addOwnerToDB(String email, Integer threshold, Long p_number) {
+        int owner_id = -1;
+        try(CallableStatement addOwnerToDB = c.prepareCall("{ ? = call addOwnerToDB(?, ?, ?)}")){
+            addOwnerToDB.registerOutParameter(1, Types.INTEGER);
+            addOwnerToDB.setString(2, email);
+            addOwnerToDB.setInt(3, threshold);
+            addOwnerToDB.setLong(4, p_number);
+            boolean b = addOwnerToDB.execute();
+            owner_id = addOwnerToDB.getInt(1);
+        }catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return owner_id;
+    }
+
+    private static void addBookToDB (long serial_no, String book_name, int owner_id){
+        try(CallableStatement addBookToDB = c.prepareCall("{call addBookToDB(?, ?, ?)}")){
+            addBookToDB.setLong(1, serial_no);
+            addBookToDB.setString(2, book_name);
+            addBookToDB.setInt(3, owner_id);
+            addBookToDB.execute();
+        }catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private static void addBook_ISBNToDB (long ISBN, String book_name, String genre,
+                                          int no_pages, float cost_price, float sales_price,
+                                          float percent_to_pub, String pub_name){
+        try(CallableStatement addBook_ISBNToDB = c.prepareCall("{call addBook_ISBNToDB(?, ?, ?, ?, ?, ?, ?, ?)}")){
+            addBook_ISBNToDB.setLong(1, ISBN);
+            addBook_ISBNToDB.setString(2, book_name);
+            addBook_ISBNToDB.setString(3, genre);
+            addBook_ISBNToDB.setInt(4, no_pages);
+            addBook_ISBNToDB.setFloat(5, cost_price);
+            addBook_ISBNToDB.setFloat(6, sales_price);
+            addBook_ISBNToDB.setFloat(7, percent_to_pub);
+            addBook_ISBNToDB.setString(8, pub_name);
+            addBook_ISBNToDB.execute();
+        }catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private static void addPublisherToDB (long bank_account, String pub_name, String email, long p_number,
+                                          String postal_code, String province, String country, String street, String city){
+        try(CallableStatement addPublisherToDB = c.prepareCall("{call addPublisherToDB(?, ?, ?, ?, ?, ?, ?, ?, ?)}")){
+            addPublisherToDB.setLong(1, bank_account);
+            addPublisherToDB.setString(2, pub_name);
+            addPublisherToDB.setString(3, email);
+            addPublisherToDB.setLong(4, p_number);
+            addPublisherToDB.setString(5, postal_code);
+            addPublisherToDB.setString(6, province);
+            addPublisherToDB.setString(7, country);
+            addPublisherToDB.setString(8, street);
+            addPublisherToDB.setString(9, city);
+            addPublisherToDB.execute();
+        }catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private static void addAuthorToDB (String author_name, long serial_no){
+        try(CallableStatement addAuthorToDB = c.prepareCall("{call addAuthorToDB(?, ?)}")){
+            addAuthorToDB.setString(1, author_name);
+            addAuthorToDB.setLong(2, serial_no);
+            addAuthorToDB.execute();
+        }catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private static Boolean bookExists(int owner_id, long serial_no) {
+        String query = "select serial_no " +
+                "from Inventory natural join Book natural join Book_ISBN natural join Book_Author natural join Author natural join Publisher " +
+                "where owner_id = ? and serial_no = ?";
+        try {
+            PreparedStatement pstmt = c.prepareStatement(query);
+            pstmt.setInt(1, owner_id);
+            pstmt.setLong(2, serial_no);
+            ResultSet rs = pstmt.executeQuery();
+            String book_found = null;
+            while (rs.next()) {
+                book_found = rs.getString("serial_no");
+            }
+            if (book_found != null) {
+                return true;
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return false;
+    }
+
+    private static void deleteBookBySerialNo(long serial_no, int owner_id) {
+        String bookTable = "delete from Book where serial_no = ?";
+        String inventoryTable = "delete from Inventory where serial_no = ? and owner_id = ?";
+        try {
+            PreparedStatement pstmt = c.prepareStatement(bookTable);
+            pstmt.setLong(1, serial_no);
+            pstmt.executeUpdate();
+
+            PreparedStatement prstmt = c.prepareStatement(inventoryTable);
+            prstmt.setLong(1, serial_no);
+            prstmt.setInt(2, owner_id);
+            prstmt.executeUpdate();
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private static ArrayList getPublisherByName(int owner_id, String pub_name) {
+        String query = "select distinct bank_account, pub_name, email, street, city, province, country, postal_code, p_number " +
+                "from Inventory natural join Book natural join Book_ISBN natural join Publisher natural join Pub_Address natural join Address natural join Postal_Address natural join Pub_Phone " +
+                "where owner_id = ? and pub_name = ?";
+        try {
+            PreparedStatement pstmt = c.prepareStatement(query);
+            pstmt.setInt(1, owner_id);
+            pstmt.setString(2, pub_name);
+            ResultSet rs = pstmt.executeQuery();
+            ArrayList<ArrayList<String>> results = new ArrayList<>();
+            while (rs.next()) {
+                ArrayList<String> pub = new ArrayList<>(9);
+                pub.add(rs.getString("pub_name"));
+                pub.add(rs.getString("email"));
+                pub.add(rs.getString("bank_account"));
+                String address = rs.getString("street") + " " + rs.getString("city") +  " " +
+                        rs.getString("province") +  " " + rs.getString("country") +  " " + rs.getString("postal_code");
+                pub.add(address);
+                pub.add(rs.getString("p_number"));
+                results.add(pub);
+            }
+            return results;
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+
+    private static ArrayList getInventory(int owner_id) {
+        String query = "select serial_no, book_name, author_name, isbn, genre, no_pages, cost_price, sales_price, sold, percent_to_pub, pub_name " +
+                "from Inventory natural join Book natural join Book_ISBN natural join Book_Author natural join Author natural join Publisher " +
+                "where owner_id = ? " +
+                "order by serial_no";
+        try {
+            PreparedStatement pstmt = c.prepareStatement(query);
+            pstmt.setInt(1, owner_id);
+            ResultSet rs = pstmt.executeQuery();
+            return getInventoryList(rs);
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+
+    private static Pair<Pair<Float, Float>, Pair<ArrayList<ArrayList<String>>, ArrayList<ArrayList<String>>>> generateSvsEReport(int owner_id){
+        String soldQuery = "select serial_no, book_name, author_name, isbn, genre, no_pages, cost_price, sales_price, sold, percent_to_pub, pub_name " +
+                "from Inventory natural join Book natural join Book_ISBN natural join Book_Author natural join Author natural join Publisher " +
+                "where owner_id = ? and sold = true " +
+                "order by serial_no";
+        String notSoldQuery = "select serial_no, book_name, author_name, isbn, genre, no_pages, cost_price, sales_price, sold, percent_to_pub, pub_name " +
+                "from Inventory natural join Book natural join Book_ISBN natural join Book_Author natural join Author natural join Publisher " +
+                "where owner_id = ? and sold = false " +
+                "order by serial_no";
+        String tot_salesQuery = "select round((sum(sales_price)-sum(percent_to_pub/100*sales_price)),2) as tot_sales " +
+                "from Inventory natural join Book natural join Book_ISBN natural join Book_Author natural join Author natural join Publisher " +
+                "where owner_id = ? and sold = true";
+        String tot_expendituresQuery = "select sum(cost_price) as tot_expenditures " +
+                "from Inventory natural join Book natural join Book_ISBN natural join Book_Author natural join Author natural join Publisher " +
+                "where owner_id = ?";
+
+        float tot_sales = 0;
+        float tot_expenditures = 0;
+        ArrayList<ArrayList<String>> sold = new ArrayList<>();
+        ArrayList<ArrayList<String>> notSold = new ArrayList<>();
+
+        try {
+            PreparedStatement pstmt1 = c.prepareStatement(soldQuery);
+            pstmt1.setInt(1, owner_id);
+            ResultSet rs1 = pstmt1.executeQuery();
+            sold = getInventoryList(rs1);
+
+            PreparedStatement pstmt2 = c.prepareStatement(notSoldQuery);
+            pstmt2.setInt(1, owner_id);
+            ResultSet rs2 = pstmt2.executeQuery();
+            notSold = getInventoryList(rs2);
+
+            PreparedStatement pstmt3 = c.prepareStatement(tot_salesQuery);
+            pstmt3.setInt(1, owner_id);
+            ResultSet rs3 = pstmt3.executeQuery();
+            rs3.next();
+            tot_sales = rs3.getFloat(1);
+
+            PreparedStatement pstmt4 = c.prepareStatement(tot_expendituresQuery);
+            pstmt4.setInt(1, owner_id);
+            ResultSet rs4 = pstmt4.executeQuery();
+            rs4.next();
+            tot_expenditures = rs4.getFloat(1);
+
+            Pair<Float, Float> floatPair = new Pair<Float, Float>(tot_sales, tot_expenditures);
+            Pair<ArrayList<ArrayList<String>>, ArrayList<ArrayList<String>>> arrayPair =
+                    new Pair<ArrayList<ArrayList<String>>, ArrayList<ArrayList<String>>>(sold, notSold);
+            return new Pair<Pair<Float, Float>, Pair<ArrayList<ArrayList<String>>, ArrayList<ArrayList<String>>>>(floatPair, arrayPair);
+
+        }catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+
+    private static Pair<ArrayList<Pair<String, Float>>, ArrayList<ArrayList<String>>> generateSalesPerGenreReport(int owner_id){
+        String tot_GenreQuery = "select genre, round((sum(sales_price)-sum(percent_to_pub/100*sales_price)),2) as tot_sales " +
+                "from Inventory natural join Book natural join Book_ISBN natural join Book_Author natural join Author natural join Publisher " +
+                "where owner_id = ? and sold = true " +
+                "group by genre";
+        String genresQuery = "select serial_no, book_name, author_name, isbn, genre, no_pages, cost_price, sales_price, sold, percent_to_pub, pub_name " +
+                "from Inventory natural join Book natural join Book_ISBN natural join Book_Author natural join Author natural join Publisher " +
+                "where owner_id = ? and sold = true " +
+                "order by genre";
+
+        ArrayList<Pair<String, Float>> tot_genres = new ArrayList<Pair<String, Float>>();
+        ArrayList<ArrayList<String>> genres = new ArrayList<>();
+
+        try {
+            PreparedStatement pstmt1 = c.prepareStatement(tot_GenreQuery);
+            pstmt1.setInt(1, owner_id);
+            ResultSet rs1 = pstmt1.executeQuery();
+            while (rs1.next()) {
+                Pair<String, Float> p = new Pair<String, Float>(rs1.getString("genre"), rs1.getFloat("tot_sales"));
+                tot_genres.add(p);
+            }
+
+            PreparedStatement pstmt2 = c.prepareStatement(genresQuery);
+            pstmt2.setInt(1, owner_id);
+            ResultSet rs2 = pstmt2.executeQuery();
+            genres = getInventoryList(rs2);
+
+            return new Pair<ArrayList<Pair<String, Float>>, ArrayList<ArrayList<String>>>(tot_genres, genres);
+
+        }catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+
+    private static Pair<ArrayList<Pair<String, Float>>, ArrayList<ArrayList<String>>> generateSalesPerAuthorReport(int owner_id){
+        String tot_AuthorsQuery = "select author_name, round((sum(sales_price)-sum(percent_to_pub/100*sales_price)),2) as tot_sales " +
+                "from Inventory natural join Book natural join Book_ISBN natural join Book_Author natural join Author natural join Publisher " +
+                "where owner_id = ? and sold = true " +
+                "group by author_name";
+        String authorsQuery = "select serial_no, book_name, author_name, isbn, genre, no_pages, cost_price, sales_price, sold, percent_to_pub, pub_name " +
+                "from Inventory natural join Book natural join Book_ISBN natural join Book_Author natural join Author natural join Publisher " +
+                "where owner_id = ? and sold = true " +
+                "order by author_name";
+
+        ArrayList<Pair<String, Float>> tot_authors = new ArrayList<Pair<String, Float>>();
+        ArrayList<ArrayList<String>> authors = new ArrayList<>();
+
+        try {
+            PreparedStatement pstmt1 = c.prepareStatement(tot_AuthorsQuery);
+            pstmt1.setInt(1, owner_id);
+            ResultSet rs1 = pstmt1.executeQuery();
+            while (rs1.next()) {
+                Pair<String, Float> p = new Pair<String, Float>(rs1.getString("author_name"), rs1.getFloat("tot_sales"));
+                tot_authors.add(p);
+            }
+
+            PreparedStatement pstmt2 = c.prepareStatement(authorsQuery);
+            pstmt2.setInt(1, owner_id);
+            ResultSet rs2 = pstmt2.executeQuery();
+            authors = getInventoryList(rs2);
+
+            return new Pair<ArrayList<Pair<String, Float>>, ArrayList<ArrayList<String>>>(tot_authors, authors);
+
+        }catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+
+    private static ArrayList<ArrayList<String>> getInventoryList(ResultSet rs) {
+        ArrayList<ArrayList<String>> results = new ArrayList<>();
+        try {
+            while (rs.next()) {
+                ArrayList<String> book = new ArrayList<>(11);
+                book.add(rs.getString("serial_no"));
+                book.add(rs.getString("book_name"));
+                book.add(rs.getString("author_name"));
+                book.add(rs.getString("isbn"));
+                book.add(rs.getString("genre"));
+                book.add(rs.getString("no_pages"));
+                book.add(rs.getString("cost_price"));
+                book.add(rs.getString("sales_price"));
+                book.add(rs.getString("sold"));
+                book.add(rs.getString("percent_to_pub"));
+                book.add(rs.getString("pub_name"));
+                results.add(book);
+            }
+            return results;
+        }catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+
+    private static void printInventory(ArrayList<ArrayList<String>> inventory){
+        System.out.printf("-%20s%35s%20s%20s%15s%7s%7s%7s%7s%7s%35s-\n", "Serial Number",
+                "Book Name", "Author", "ISBN", "Genre", "Pages", "Cost", "Price", "Sold", "% Pub", "Publisher");
+        for (int i = 0; i < inventory.size(); ++i) {
+            System.out.print("-");
+            for (int j = 0; j < inventory.get(i).size(); ++j) {
+                if(j == 0 || j == 2 || j == 3){
+                    System.out.printf("%20s", inventory.get(i).get(j));
+                }
+                else if(j == 1 || j == 10){
+                    System.out.printf("%35s", inventory.get(i).get(j));
+                }
+                else if(j == 4){
+                    System.out.printf("%15s", inventory.get(i).get(j));
+                }
+                else if(j>=5 && j<=9){
+                    System.out.printf("%7s", inventory.get(i).get(j));
+                }
+            }
+            System.out.print("-\n");
+        }
     }
 }
