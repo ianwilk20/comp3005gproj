@@ -208,13 +208,27 @@ public class LookInABookApp {
     }
 
     /**
-     * The User Book Search Loop
+     * The User Book Search/Order Lookup Loop
      */
     private static void userLoop() {
         Scanner uInput = new Scanner(System.in);
         System.out.println("--------------------------------------------------");
-        //orderSearch();
-        //bookSearch();
+        System.out.println("What would you like to do");
+        System.out.println(" (1) - Search for a book \t (2) - Track an existing order");
+        System.out.print("\n\t \tSelection: ");
+        Integer selection = uInput.nextInt();
+        if (selection == 1){
+            bookSearch();
+        } else if (selection == 2){
+            orderSearch();
+        } else {
+            userLoop();
+        }
+    }
+
+    private static void bookSearch(){
+        Scanner uInput = new Scanner(System.in);
+        System.out.println("--------------------------------------------------");
         System.out.println("How would you like to search for your book?");
         System.out.print(" (1) - Book Name \t (2) - Author Name \t (3) - ISBN \t (4) - Genre");
         Integer selection = uInput.nextInt();
@@ -232,7 +246,7 @@ public class LookInABookApp {
                         if (choice == 1){
                             continue;
                         } else if (choice == 2){
-                            userLoop();
+                            bookSearch();
                         }
                     } else {
                         System.out.println("-------------------------------");
@@ -251,6 +265,32 @@ public class LookInABookApp {
                 userLoop();
         }
     }
+
+    private static void orderSearch(){
+        Scanner uInput = new Scanner(System.in);
+        System.out.println("--------------------------------------------------");
+        System.out.println("Please enter your order number: ");
+        String order_no = uInput.nextLine();
+        Long order_number;
+        try {
+            Long.parseLong(order_no);
+        } catch (NumberFormatException nfe){
+            System.out.println("Invalid order number");
+            orderSearch();
+        }
+
+        String order_status = getOrderDetailsFromOrder(order_no);
+        if (order_status.equals("Not Found")){
+            System.out.println("--------------------------------------------------");
+            System.out.println("We could not find the order you're looking for.");
+        } else {
+            System.out.println("--------------------------------------------------");
+            System.out.println("Order: " + order_no + " Status: " + order_status);
+        }
+        userLoop();
+
+    }
+
 
     /**
      * Get User with Specified user_name from DB
@@ -459,5 +499,22 @@ public class LookInABookApp {
             createUserShipping();
 
         }
+    }
+
+    private static String getOrderDetailsFromOrder(String order_no) {
+        String query = "SELECT order_status FROM users NATURAL JOIN users_orders NATURAL JOIN orders WHERE orders.order_no = ?";
+        try {
+            PreparedStatement pstmt = c.prepareStatement(query);
+            pstmt.setLong(1, Long.parseLong(order_no));
+            ResultSet rs = pstmt.executeQuery();
+            if (rs.next()){
+                String status = rs.getString("order_status");
+                return status;
+            }
+        } catch (SQLException e) {
+            System.out.println("Error when finding that order with order number:" + order_no);
+            e.printStackTrace();
+        }
+        return "Not Found";
     }
 }
