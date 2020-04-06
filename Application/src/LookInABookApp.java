@@ -244,7 +244,7 @@ public class LookInABookApp {
         switch(selection){
             case 1:
                 while (true){
-                    System.out.print("Search by [Book Name]: ");
+                    System.out.print("Search by [Entire Collection]: ");
                     String book_name = uInput.nextLine();
                     ArrayList<BookDetails> returnedBooks = getBooksByName(book_name);
                     if (returnedBooks != null && returnedBooks.size() >= 0){
@@ -267,7 +267,29 @@ public class LookInABookApp {
                     }
                 }
             case 2:
-                break;
+                while (true){
+                    System.out.print("Search by [Book Name]: ");
+                    String book_name = uInput.nextLine();
+                    ArrayList<BookDetails> returnedBooks = getBooksByName(book_name);
+                    if (returnedBooks != null && returnedBooks.size() >= 0){
+                        System.out.println("-------------------------------");
+                        System.out.println("/| We found the following books |\\");
+                        System.out.println("Serial Number - ISBN - Book Name - Book Author - Genre - Number of Pages - Sales Price");
+                        for (BookDetails bd: returnedBooks){
+                            System.out.println( bd.serial_no + " " + bd.ISBN + " " + bd.book_name + " " + bd.author_name + " " + bd.genre + " " + bd.no_pages + " " + bd.sales_price);
+                        }
+                        checkoutOrSearchLoop(returnedBooks);
+                    } else {
+                        System.out.println("The Book: '" + book_name + "' could not be found.");
+                        System.out.print("Would you like to (1) Try Again \t (2) Return to Search: ");
+                        Integer choice = uInput.nextInt();
+                        if (choice == 1){
+                            continue;
+                        } else if (choice == 2){
+                            bookSearch();
+                        }
+                    }
+                }
             case 3:
                 break;
             case 4:
@@ -467,8 +489,8 @@ public class LookInABookApp {
      * @return
      */
     private static ArrayList<BookDetails> getUsersCart() {
-        String query = "select checkout.serial_no, isbn, book_name, author_name, genre, no_pages, sales_price " +
-                       "from checkout natural join Book natural join Book_ISBN natural join Book_Author natural join Author " +
+        String query = "select checkout.serial_no, isbn, book_name, author_name, genre, pub_name, no_pages, sales_price " +
+                       "from checkout natural join Book natural join Book_ISBN natural join Book_Author natural join Author natural join Publisher " +
                        "where account_no = ?";
 
         Statement stmt = null;
@@ -483,9 +505,10 @@ public class LookInABookApp {
                 Long isbn = rs.getLong("isbn");
                 String name = rs.getString("book_name");
                 String genre = rs.getString("genre");
+                String publisher = rs.getString("pub_name");
                 int no_pages = rs.getInt("no_pages");
                 float price = rs.getFloat("sales_price");
-                bd = new BookDetails(serial_no, isbn, name, genre, no_pages, price);
+                bd = new BookDetails(serial_no, isbn, name, genre, publisher, no_pages, price);
                 booksReturned.add(bd);
             }
             return booksReturned;
@@ -600,8 +623,8 @@ public class LookInABookApp {
      * @return
      */
     private static ArrayList<BookDetails> getBooksByName(String book_name){
-        String query = "SELECT distinct on (Book.isbn) isbn, serial_no, book_name, author_name, genre, no_pages, sales_price " +
-                       "from Book natural join Book_ISBN natural join Book_Author natural join Author " +
+        String query = "SELECT distinct on (Book.isbn) isbn, serial_no, book_name, author_name, genre, pub_name, no_pages, sales_price " +
+                       "from Book natural join Book_ISBN natural join Book_Author natural join Author natural join Publisher" +
                        "WHERE book_name LIKE ? and Book.sold = false";
         Statement stmt = null;
         ArrayList<BookDetails> booksReturned = new ArrayList<BookDetails>();
@@ -615,10 +638,47 @@ public class LookInABookApp {
              Long isbn = rs.getLong("isbn");
              String name = rs.getString("book_name");
              String genre = rs.getString("genre");
+             String publisher = rs.getString("pub_name");
              int no_pages = rs.getInt("no_pages");
              float price = rs.getFloat("sales_price");
-             bd = new BookDetails(serial_no, isbn, name, genre, no_pages, price);
+             bd = new BookDetails(serial_no, isbn, name, genre, publisher, no_pages, price);
              booksReturned.add(bd);
+            }
+            return booksReturned;
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+            booksReturned = null;
+        }
+        return booksReturned;
+    }
+
+    /**
+     * Get Book By Collection
+     * @param book_details
+     * @return
+     */
+    private static ArrayList<BookDetails> getBooksByCollection(String book_details){
+        String query = "SELECT distinct on (Book.isbn) isbn, serial_no, book_name, author_name, genre, no_pages, sales_price " +
+                        "from Book natural join Book_ISBN natural join Book_Author natural join Author " +
+                        "WHERE book_name LIKE ? and Book.sold = false";
+        Statement stmt = null;
+        ArrayList<BookDetails> booksReturned = new ArrayList<BookDetails>();
+        try {
+            PreparedStatement pstmt = c.prepareStatement(query);
+            pstmt.setString(1, "%" + book_details + "%");
+            ResultSet rs = pstmt.executeQuery();
+            while (rs.next()){
+                BookDetails bd;
+                Long serial_no  = rs.getLong("serial_no");
+                Long isbn = rs.getLong("isbn");
+                String name = rs.getString("book_name");
+                String genre = rs.getString("genre");
+                String publisher = rs.getString("pub_name");
+                int no_pages = rs.getInt("no_pages");
+                float price = rs.getFloat("sales_price");
+                bd = new BookDetails(serial_no, isbn, name, genre, publisher, no_pages, price);
+                booksReturned.add(bd);
             }
             return booksReturned;
 
