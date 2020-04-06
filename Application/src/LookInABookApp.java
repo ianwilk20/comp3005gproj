@@ -251,10 +251,7 @@ public class LookInABookApp {
                     if (returnedBooks != null && returnedBooks.size() >= 0){
                         System.out.println("-------------------------------");
                         System.out.println("/| We found the following books |\\");
-                        System.out.println("Serial Number - ISBN - Book Name - Book Author - Genre - Number of Pages - Sales Price");
-                        for (BookDetails bd: returnedBooks){
-                            System.out.println( bd.serial_no + " " + bd.ISBN + " " + bd.book_name + " " + bd.author_name + " " + bd.genre + " " + bd.no_pages + " " + bd.sales_price);
-                        }
+                        printBookDetails(returnedBooks);
                         checkoutOrSearchLoop(returnedBooks);
                     } else {
                         System.out.println("The Book: '" + book_name + "' could not be found.");
@@ -275,10 +272,7 @@ public class LookInABookApp {
                     if (returnedBooks != null && returnedBooks.size() >= 0){
                         System.out.println("-------------------------------");
                         System.out.println("/| We found the following books |\\");
-                        System.out.println("Serial Number - ISBN - Book Name - Book Author - Genre - Number of Pages - Sales Price");
-                        for (BookDetails bd: returnedBooks){
-                            System.out.println( bd.serial_no + " " + bd.ISBN + " " + bd.book_name + " " + bd.author_name + " " + bd.genre + " " + bd.no_pages + " " + bd.sales_price);
-                        }
+                        printBookDetails(returnedBooks);
                         checkoutOrSearchLoop(returnedBooks);
                     } else {
                         System.out.println("The author: '" + author_name + "' could not be found.");
@@ -344,14 +338,7 @@ public class LookInABookApp {
         System.out.println("Your Cart"); //print cart
         ArrayList<BookDetails> booksInCart = getUsersCart();
         if (booksInCart != null && booksInCart.size() > 0){
-            System.out.println("Serial Number - ISBN - Book Name - Book Author - Genre - Number of Pages - Sales Price");
-            float total = 0;
-            for (BookDetails bd: booksInCart){
-                total += bd.sales_price;
-                System.out.println( bd.serial_no + " " + bd.ISBN + " " + bd.book_name + " " + bd.author_name + " " + bd.genre + " " + bd.no_pages + " " + bd.sales_price);
-            }
-            System.out.println("\n Your Total = $" + total);
-            System.out.println("--------------------------------------------------");
+            printBookDetailsForCart(booksInCart);
         }
         System.out.println("What would you like to do?");
         System.out.println("(1) - New Search \t (2) - Place Order");
@@ -382,12 +369,9 @@ public class LookInABookApp {
                 insertUserOrder();
                 copyUserAddressesToOrderInformation();
                 System.out.println("| -- Order Created -- |");
-                System.out.println("Order Number - Serial Number - Book Name - Book Author - Genre - Number of Pages - Sales Price");
                 ArrayList<OrderDetails> returnedOrdersCreated = getOrderDetailsFromCreatedOrder();
                 if (returnedOrdersCreated != null && returnedOrdersCreated.size() > 0){
-                    for (OrderDetails order: returnedOrdersCreated){
-                        order.toString();
-                    }
+                    printOrderDetails(returnedOrdersCreated);
                 } else {
                     System.out.println("Error when retrieving order details ");
                 }
@@ -505,11 +489,12 @@ public class LookInABookApp {
                 Long serial_no  = rs.getLong("serial_no");
                 Long isbn = rs.getLong("isbn");
                 String name = rs.getString("book_name");
+                String author = rs.getString("author_name");
                 String genre = rs.getString("genre");
                 String publisher = rs.getString("pub_name");
                 int no_pages = rs.getInt("no_pages");
                 float price = rs.getFloat("sales_price");
-                bd = new BookDetails(serial_no, isbn, name, genre, publisher, no_pages, price);
+                bd = new BookDetails(serial_no, isbn, name, author, genre, publisher, no_pages, price);
                 booksReturned.add(bd);
             }
             return booksReturned;
@@ -638,11 +623,12 @@ public class LookInABookApp {
              Long serial_no  = rs.getLong("serial_no");
              Long isbn = rs.getLong("isbn");
              String name = rs.getString("book_name");
+             String author = rs.getString("author_name");
              String genre = rs.getString("genre");
              String publisher = rs.getString("pub_name");
              int no_pages = rs.getInt("no_pages");
              float price = rs.getFloat("sales_price");
-             bd = new BookDetails(serial_no, isbn, name, genre, publisher, no_pages, price);
+             bd = new BookDetails(serial_no, isbn, name, author, genre, publisher, no_pages, price);
              booksReturned.add(bd);
             }
             return booksReturned;
@@ -674,11 +660,12 @@ public class LookInABookApp {
                 Long serial_no  = rs.getLong("serial_no");
                 Long isbn = rs.getLong("isbn");
                 String name = rs.getString("book_name");
+                String author = rs.getString("author_name");
                 String genre = rs.getString("genre");
                 String publisher = rs.getString("pub_name");
                 int no_pages = rs.getInt("no_pages");
                 float price = rs.getFloat("sales_price");
-                bd = new BookDetails(serial_no, isbn, name, genre, publisher, no_pages, price);
+                bd = new BookDetails(serial_no, isbn, name, author, genre, publisher, no_pages, price);
                 booksReturned.add(bd);
             }
             return booksReturned;
@@ -710,11 +697,12 @@ public class LookInABookApp {
                 Long serial_no  = rs.getLong("serial_no");
                 Long s_isbn = rs.getLong("isbn");
                 String name = rs.getString("book_name");
+                String author = rs.getString("author_name");
                 String genre = rs.getString("genre");
                 String publisher = rs.getString("pub_name");
                 int no_pages = rs.getInt("no_pages");
                 float price = rs.getFloat("sales_price");
-                bd = new BookDetails(serial_no, s_isbn, name, genre, publisher, no_pages, price);
+                bd = new BookDetails(serial_no, s_isbn, name, author, genre, publisher, no_pages, price);
                 booksReturned.add(bd);
             }
             return booksReturned;
@@ -1607,16 +1595,19 @@ public class LookInABookApp {
     }
 
     private static void printInventory(ArrayList<ArrayList<String>> inventory) {
-        System.out.printf("-%20s%35s%20s%20s%15s%7s%7s%7s%7s%7s%35s-\n", "Serial Number",
+        System.out.printf("-%20s%50s%20s%20s%15s%7s%7s%7s%7s%7s%35s-\n", "Serial Number",
                 "Book Name", "Author", "ISBN", "Genre", "Pages", "Cost", "Price", "Sold", "% Pub", "Publisher");
         for (int i = 0; i < inventory.size(); ++i) {
             System.out.print("-");
             for (int j = 0; j < inventory.get(i).size(); ++j) {
                 if (j == 0 || j == 2 || j == 3) {
                     System.out.printf("%20s", inventory.get(i).get(j));
-                } else if (j == 1 || j == 10) {
+                } else if (j == 1) {
+                    System.out.printf("%50s", inventory.get(i).get(j));
+                } else if(j == 10){
                     System.out.printf("%35s", inventory.get(i).get(j));
-                } else if (j == 4) {
+                }
+                else if (j == 4) {
                     System.out.printf("%15s", inventory.get(i).get(j));
                 } else if (j >= 5 && j <= 9) {
                     System.out.printf("%7s", inventory.get(i).get(j));
@@ -1627,12 +1618,12 @@ public class LookInABookApp {
     }
 
     private static void printBookDetails(ArrayList<BookDetails> book){
-        System.out.printf("-%20s%35s%20s%20s%15s%7s%7s%35s-\n", "Serial Number",
+        System.out.printf("-%20s%50s%20s%20s%15s%7s%7s%35s-\n", "Serial Number",
                 "Book Name", "Author", "ISBN", "Genre", "Pages", "Price", "Publisher");
         for (int i = 0; i < book.size(); ++i) {
             System.out.print("-");
             System.out.printf("%20s", book.get(i).serial_no + "");
-            System.out.printf("%35s", book.get(i).book_name + "");
+            System.out.printf("%50s", book.get(i).book_name + "");
             System.out.printf("%20s", book.get(i).author_name + "");
             System.out.printf("%20s", book.get(i).ISBN + "");
             System.out.printf("%15s", book.get(i).genre + "");
@@ -1643,14 +1634,34 @@ public class LookInABookApp {
         }
     }
 
+    private static void printBookDetailsForCart(ArrayList<BookDetails> book){
+        System.out.printf("-%20s%50s%20s%20s%15s%7s%7s%35s-\n", "Serial Number",
+                "Book Name", "Author", "ISBN", "Genre", "Pages", "Price", "Publisher");
+        float total = 0;
+        for (int i = 0; i < book.size(); ++i) {
+            total += book.get(i).sales_price;
+            System.out.print("-");
+            System.out.printf("%20s", book.get(i).serial_no + "");
+            System.out.printf("%50s", book.get(i).book_name + "");
+            System.out.printf("%20s", book.get(i).author_name + "");
+            System.out.printf("%20s", book.get(i).ISBN + "");
+            System.out.printf("%15s", book.get(i).genre + "");
+            System.out.printf("%7s", book.get(i).no_pages + "");
+            System.out.printf("%7s", book.get(i).sales_price + "");
+            System.out.printf("%35s", book.get(i).publisher + "");
+            System.out.print("-\n");
+        }
+        System.out.println("\n Your Total = $" + total);
+    }
+
     private static void printOrderDetails(ArrayList<OrderDetails> order){
-        System.out.printf("-%20s%20s%35s%20s%15s%7s%7s-\n", "Order Number", "Serial Number",
+        System.out.printf("-%20s%20s%50s%20s%15s%7s%7s-\n", "Order Number", "Serial Number",
                 "Book Name", "Author", "Genre", "Pages", "Price");
         for (int i = 0; i < order.size(); ++i) {
             System.out.print("-");
             System.out.printf("%20s", order.get(i).order_no + "");
             System.out.printf("%20s", order.get(i).serial_no + "");
-            System.out.printf("%35s", order.get(i).book_name + "");
+            System.out.printf("%50s", order.get(i).book_name + "");
             System.out.printf("%20s", order.get(i).author_name + "");
             System.out.printf("%15s", order.get(i).genre + "");
             System.out.printf("%7s", order.get(i).no_pages + "");

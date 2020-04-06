@@ -10,10 +10,11 @@ public class BookDetails {
     int no_pages;
     float sales_price;
 
-    public BookDetails(Long s_no, Long isbn, String name, String g, String pub, int num, float price) {
+    public BookDetails(Long s_no, Long isbn, String b_name, String author, String g, String pub, int num, float price) {
         serial_no = s_no;
         ISBN = isbn;
-        book_name = name;
+        book_name = b_name;
+        author_name = author;
         genre = g;
         publisher = pub;
         no_pages = num;
