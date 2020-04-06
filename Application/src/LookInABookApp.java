@@ -1625,4 +1625,37 @@ public class LookInABookApp {
             System.out.print("-\n");
         }
     }
+
+    private static void printBookDetails(ArrayList<BookDetails> book){
+        System.out.printf("-%20s%35s%20s%20s%15s%7s%7s%35s-\n", "Serial Number",
+                "Book Name", "Author", "ISBN", "Genre", "Pages", "Price", "Publisher");
+        for (int i = 0; i < book.size(); ++i) {
+            System.out.print("-");
+            System.out.printf("%20s", book.get(i).serial_no + "");
+            System.out.printf("%35s", book.get(i).book_name + "");
+            System.out.printf("%20s", book.get(i).author_name + "");
+            System.out.printf("%20s", book.get(i).ISBN + "");
+            System.out.printf("%15s", book.get(i).genre + "");
+            System.out.printf("%7s", book.get(i).no_pages + "");
+            System.out.printf("%7s", book.get(i).sales_price + "");
+            System.out.printf("%35s", book.get(i).publisher + "");
+            System.out.print("-\n");
+        }
+    }
+
+    private static void printOrderDetails(ArrayList<OrderDetails> order){
+        System.out.printf("-%20s%20s%35s%20s%15s%7s%7s-\n", "Order Number", "Serial Number",
+                "Book Name", "Author", "Genre", "Pages", "Price");
+        for (int i = 0; i < order.size(); ++i) {
+            System.out.print("-");
+            System.out.printf("%20s", order.get(i).order_no + "");
+            System.out.printf("%20s", order.get(i).serial_no + "");
+            System.out.printf("%35s", order.get(i).book_name + "");
+            System.out.printf("%20s", order.get(i).author_name + "");
+            System.out.printf("%15s", order.get(i).genre + "");
+            System.out.printf("%7s", order.get(i).no_pages + "");
+            System.out.printf("%7s", order.get(i).sales_price + "");
+            System.out.print("-\n");
+        }
+    }
 }
