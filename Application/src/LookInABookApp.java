@@ -1,3 +1,5 @@
+import javax.sound.midi.SysexMessage;
+import java.awt.print.Book;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.sql.*;
@@ -133,16 +135,23 @@ public class LookInABookApp {
             System.out.print("Enter your country: ");
             String country = uInput.nextLine();
             System.out.print("Enter your credit card number: ");
-            BigInteger creditCard = uInput.nextBigInteger();
+            String creditCard = uInput.nextLine();
+            Long creditParsed = null;
+            try {
+                Long.parseLong(creditCard);
+            } catch (NumberFormatException nfe){
+                System.out.println("Invalid order number");
+                createUserBilling();
+            }
 
 
             if (street.isEmpty() || street == null || city.isEmpty() || city == null || postal_code.isEmpty() || postal_code == null ||
-                province.isEmpty() || province == null || country.isEmpty() || country == null || creditCard == null) {
+                province.isEmpty() || province == null || country.isEmpty() || country == null || creditParsed == null) {
                 System.out.println("Invalid entry or entire(s) please try again!");
                 continue;
             } else {
                 //int result = insertIntoAddressAndPostalAddress(street, city, postal_code, province, country);
-                boolean result = insertUserBillingIntoDB(street, city, postal_code, creditCard, province, country);
+                boolean result = insertUserBillingIntoDB(street, city, postal_code, creditParsed, province, country);
                 System.out.println("--------------------------------------------------\n");
                 if (result == false){
                     System.out.println("Please try again.");
@@ -226,11 +235,14 @@ public class LookInABookApp {
         }
     }
 
+    /**
+     * Directs User to the Book Search
+     */
     private static void bookSearch(){
         Scanner uInput = new Scanner(System.in);
         System.out.println("--------------------------------------------------");
         System.out.println("How would you like to search for your book?");
-        System.out.print(" (1) - Book Name \t (2) - Author Name \t (3) - ISBN \t (4) - Genre");
+        System.out.print(" (1) - Entire Collection \t (2) - Book Name \t (3) - Author Name \t (4) - ISBN \t (5) - Genre");
         Integer selection = uInput.nextInt();
 
         switch(selection){
@@ -238,8 +250,16 @@ public class LookInABookApp {
                 while (true){
                     System.out.print("Search by [Book Name]: ");
                     String book_name = uInput.nextLine();
-                    String result = getBookByName(book_name);
-                    if (result.equals("Not Found")){
+                    ArrayList<BookDetails> returnedBooks = getBooksByName(book_name);
+                    if (returnedBooks != null && returnedBooks.size() >= 0){
+                        System.out.println("-------------------------------");
+                        System.out.println("/| We found the following books |\\");
+                        System.out.println("Serial Number - ISBN - Book Name - Book Author - Genre - Number of Pages - Sales Price");
+                        for (BookDetails bd: returnedBooks){
+                            System.out.println( bd.serial_no + " " + bd.ISBN + " " + bd.book_name + " " + bd.author_name + " " + bd.genre + " " + bd.no_pages + " " + bd.sales_price);
+                        }
+                        checkoutOrSearchLoop(returnedBooks);
+                    } else {
                         System.out.println("The Book: '" + book_name + "' could not be found.");
                         System.out.print("Would you like to (1) Try Again \t (2) Return to Search: ");
                         Integer choice = uInput.nextInt();
@@ -248,10 +268,6 @@ public class LookInABookApp {
                         } else if (choice == 2){
                             bookSearch();
                         }
-                    } else {
-                        System.out.println("-------------------------------");
-                        System.out.println("/| We found the following books |\\");
-                        System.out.println(result); //not gonna be this easy...
                     }
                 }
             case 2:
@@ -266,6 +282,251 @@ public class LookInABookApp {
         }
     }
 
+    /**
+     * Directs User to Add Book to Checkout or to go to bookSearch()
+     * @param selectedBooks
+     */
+    private static void checkoutOrSearchLoop(ArrayList<BookDetails> selectedBooks) {
+        Scanner uInput = new Scanner(System.in);
+        System.out.println("--------------------------------------------------");
+        System.out.println("What would you like to do?");
+        System.out.println("(1) - Add a Book to your Cart \t (2) - Return to Main Search");
+        int choice = uInput.nextInt();
+        while (true){
+            if (choice == 1){
+                System.out.println("Enter the serial number of the book to add to cart");
+                int serial_no = uInput.nextInt();
+                boolean found = false;
+                for (BookDetails bd : selectedBooks){
+                    if (bd.serial_no.equals(serial_no)){
+                        insertBookToCheckout(bd.serial_no);
+                        found = true;
+                        break;
+                    }
+                }
+                if (found == false) {
+                    System.out.println("Make sure you entered the correct serial number from the list of results and try again.");
+                    continue;
+                } else {
+                    newSearchOrPlaceOrder();
+                }
+            } else if (choice == 2){
+                bookSearch();
+            } else { checkoutOrSearchLoop(selectedBooks); }
+        }
+    }
+
+    /**
+     * Menu to link back to search or to place an order
+     */
+    private static void newSearchOrPlaceOrder() {
+        Scanner uInput = new Scanner(System.in);
+        System.out.println("--------------------------------------------------");
+        System.out.println("Your Cart"); //print cart
+        ArrayList<BookDetails> booksInCart = getUsersCart();
+        if (booksInCart != null && booksInCart.size() > 0){
+            System.out.println("Serial Number - ISBN - Book Name - Book Author - Genre - Number of Pages - Sales Price");
+            float total = 0;
+            for (BookDetails bd: booksInCart){
+                total += bd.sales_price;
+                System.out.println( bd.serial_no + " " + bd.ISBN + " " + bd.book_name + " " + bd.author_name + " " + bd.genre + " " + bd.no_pages + " " + bd.sales_price);
+            }
+            System.out.println("\n Your Total = $" + total);
+            System.out.println("--------------------------------------------------");
+        }
+        System.out.println("What would you like to do?");
+        System.out.println("(1) - New Search \t (2) - Place Order");
+        int choice = uInput.nextInt();
+        while (true){
+            if (choice == 1){
+                bookSearch();
+            } else if (choice == 2){
+                checkoutLoop();
+            } else {
+                newSearchOrPlaceOrder();
+            }
+        }
+    }
+
+    /**
+     * Place order loop
+     */
+    private static void checkoutLoop() {
+        Scanner uInput = new Scanner(System.in);
+        System.out.println("--------------------------------------------------");
+        System.out.println("Would you like to make your order billing and shipping the same as your account billing and shipping?");
+        System.out.println(" (1) - Yes \t (2) - No");
+        System.out.print("Your Selection: ");
+        int choice = uInput.nextInt();
+        while (true){
+            if (choice == 1){
+                insertUserOrder();
+                copyUserAddressesToOrderInformation();
+                System.out.println("| -- Order Created -- |");
+                System.out.println("Order Number - Serial Number - Book Name - Book Author - Genre - Number of Pages - Sales Price");
+                ArrayList<OrderDetails> returnedOrdersCreated = getOrderDetailsFromCreatedOrder();
+                if (returnedOrdersCreated != null && returnedOrdersCreated.size() > 0){
+                    for (OrderDetails order: returnedOrdersCreated){
+                        order.toString();
+                    }
+                } else {
+                    System.out.println("Error when retrieving order details ");
+                }
+                deleteCheckoutItems();
+            } else if (choice == 2) {
+                Billing_Address orderBilling = getBillingForOrder();
+                Shipping_Address orderShipping = getShippingForOrder();
+                insertUserOrder();
+                insertOrderShippingAndBilling(orderBilling, orderShipping);
+                System.out.println("| -- Order Created -- |");
+                System.out.println("Order Number - Serial Number - Book Name - Book Author - Genre - Number of Pages - Sales Price");
+                ArrayList<OrderDetails> returnedOrdersCreated = getOrderDetailsFromCreatedOrder();
+                if (returnedOrdersCreated != null && returnedOrdersCreated.size() > 0){
+                    for (OrderDetails order: returnedOrdersCreated){
+                        order.toString();
+                    }
+                } else {
+                    System.out.println("Error when retrieving order details ");
+                }
+                deleteCheckoutItems();
+            } else {
+                checkoutLoop();
+            }
+        }
+    }
+
+    /**
+     * Get Billing Information for Order
+     * @return a Billing_Address Object
+     */
+    private static Billing_Address getBillingForOrder() {
+        Scanner uInput = new Scanner(System.in);
+        while (true){
+            System.out.println("| -------  Order Billing Information ------- |");
+            System.out.print("Enter your street address: ");
+            String street = uInput.nextLine();
+            System.out.print("Enter your city: ");
+            String city = uInput.nextLine();
+            System.out.print("Enter your postal code: ");
+            String postal_code = uInput.nextLine();
+            System.out.print("Enter your province: ");
+            String province = uInput.nextLine();
+            System.out.print("Enter your country: ");
+            String country = uInput.nextLine();
+            System.out.print("Enter your credit card number: ");
+
+            String creditCard = uInput.nextLine();
+            Long creditParsed = null;
+            try {
+                Long.parseLong(creditCard);
+            } catch (NumberFormatException nfe){
+                System.out.println("Invalid order number");
+                getBillingForOrder();
+            }
+
+
+            if (street.isEmpty() || street == null || city.isEmpty() || city == null || postal_code.isEmpty() || postal_code == null ||
+                    province.isEmpty() || province == null || country.isEmpty() || country == null || creditParsed == null) {
+                System.out.println("Invalid entry or entire(s) please try again!");
+                continue;
+            } else {
+                return new Billing_Address(postal_code, street, city, province, country, creditParsed);
+            }
+        }
+    }
+
+    /**
+     * Get Shipping Information for Order
+     * @return a Shipping_Address Object
+     */
+    private static Shipping_Address getShippingForOrder() {
+        Scanner uInput = new Scanner(System.in);
+        while (true){
+            System.out.println("| -------  Order Billing Information ------- |");
+            System.out.print("Enter your street address: ");
+            String street = uInput.nextLine();
+            System.out.print("Enter your city: ");
+            String city = uInput.nextLine();
+            System.out.print("Enter your postal code: ");
+            String postal_code = uInput.nextLine();
+            System.out.print("Enter your province: ");
+            String province = uInput.nextLine();
+            System.out.print("Enter your country: ");
+            String country = uInput.nextLine();
+
+            if (street.isEmpty() || street == null || city.isEmpty() || city == null || postal_code.isEmpty() || postal_code == null ||
+                    province.isEmpty() || province == null || country.isEmpty() || country == null) {
+                System.out.println("Invalid entry or entire(s) please try again!");
+                continue;
+            } else {
+                return new Shipping_Address(postal_code, street, city, province, country);
+            }
+        }
+    }
+
+    /* ----------- DB FUNCTIONS -----------*/
+
+    /**
+     * Get Books from the users Cart
+     * @return
+     */
+    private static ArrayList<BookDetails> getUsersCart() {
+        String query = "select checkout.serial_no, isbn, book_name, author_name, genre, no_pages, sales_price " +
+                       "from checkout natural join Book natural join Book_ISBN natural join Book_Author natural join Author " +
+                       "where account_no = ?";
+
+        Statement stmt = null;
+        ArrayList<BookDetails> booksReturned = new ArrayList<BookDetails>();
+        try {
+            PreparedStatement pstmt = c.prepareStatement(query);
+            pstmt.setLong(1, userAccountNumber);
+            ResultSet rs = pstmt.executeQuery();
+            while (rs.next()){
+                BookDetails bd;
+                Long serial_no  = rs.getLong("serial_no");
+                Long isbn = rs.getLong("isbn");
+                String name = rs.getString("book_name");
+                String genre = rs.getString("genre");
+                int no_pages = rs.getInt("no_pages");
+                float price = rs.getFloat("sales_price");
+                bd = new BookDetails(serial_no, isbn, name, genre, no_pages, price);
+                booksReturned.add(bd);
+            }
+            return booksReturned;
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+            booksReturned = null;
+        }
+        return booksReturned;
+    }
+
+    /**
+     * Add Book to checkout
+     * @param serial_no
+     */
+    private static void insertBookToCheckout(Long serial_no) {
+        String query = "insert into checkout(serial_no, account_no) values (?, ?)";
+        Statement stmt = null;
+        try {
+            PreparedStatement pstmt = c.prepareStatement(query);
+            pstmt.setLong(1, serial_no);
+            pstmt.setLong(2, userAccountNumber);
+            int results = pstmt.executeUpdate();
+            if (results == 1) {
+                System.out.println("Successfully added the book with serial number: " + serial_no + " to your cart!");
+            } else {
+                System.out.println("Error! Couldn't add the book to your cart.");
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+            System.out.println("Error in DB! Couldn't add the book to your cart.");
+        }
+    }
+
+    /**
+     * Look-up an order by @Order_no
+     */
     private static void orderSearch(){
         Scanner uInput = new Scanner(System.in);
         System.out.println("--------------------------------------------------");
@@ -290,7 +551,6 @@ public class LookInABookApp {
         userLoop();
 
     }
-
 
     /**
      * Get User with Specified user_name from DB
@@ -343,22 +603,34 @@ public class LookInABookApp {
      * @param book_name
      * @return
      */
-    private static String getBookByName(String book_name){
-        String query = "SELECT * FROM Book_ISBN WHERE book_name LIKE ?";
+    private static ArrayList<BookDetails> getBooksByName(String book_name){
+        String query = "SELECT distinct on (Book.isbn) isbn, serial_no, book_name, author_name, genre, no_pages, sales_price " +
+                       "from Book natural join Book_ISBN natural join Book_Author natural join Author " +
+                       "WHERE book_name LIKE ? and Book.sold = false";
         Statement stmt = null;
+        ArrayList<BookDetails> booksReturned = new ArrayList<BookDetails>();
         try {
             PreparedStatement pstmt = c.prepareStatement(query);
-            pstmt.setString(1, book_name);
+            pstmt.setString(1, "%" + book_name + "%");
             ResultSet rs = pstmt.executeQuery();
-            rs.next();
-            String book_found = rs.getString(book_name);
-            return book_found;
-//            if (count > 0) { return true; }
-//            else { return false; }
+            while (rs.next()){
+             BookDetails bd;
+             Long serial_no  = rs.getLong("serial_no");
+             Long isbn = rs.getLong("isbn");
+             String name = rs.getString("book_name");
+             String genre = rs.getString("genre");
+             int no_pages = rs.getInt("no_pages");
+             float price = rs.getFloat("sales_price");
+             bd = new BookDetails(serial_no, isbn, name, genre, no_pages, price);
+             booksReturned.add(bd);
+            }
+            return booksReturned;
+
         } catch (SQLException e) {
             e.printStackTrace();
+            booksReturned = null;
         }
-        return "Not Found";
+        return booksReturned;
     }
 
     /**
@@ -387,18 +659,17 @@ public class LookInABookApp {
      * @param creditCard
      * @return
      */
-    private static boolean insertUserBillingIntoDB(String street, String city, String postal_code, BigInteger creditCard, String province, String country) {
+    private static boolean insertUserBillingIntoDB(String street, String city, String postal_code, Long creditCard, String province, String country) {
         String billingQuery = "SELECT \"insert_users_billing\" (?, ?, ?, ?, ?, ?, ?)";
         ResultSet results = null;
         String u_AN = Integer.toString(userAccountNumber);
-        String c_c = creditCard.toString();
         try {
             PreparedStatement pstmt = c.prepareStatement(billingQuery);
             pstmt.setLong(1, Long.parseLong(u_AN));
             pstmt.setString(2, postal_code);
             pstmt.setString(3, street);
             pstmt.setString(4, city);
-            pstmt.setLong(5, Long.parseLong(c_c));
+            pstmt.setLong(5, creditCard);
             pstmt.setString(6, province);
             pstmt.setString(7, country);
             results = pstmt.executeQuery();
@@ -501,11 +772,19 @@ public class LookInABookApp {
         }
     }
 
+    /**
+     * Used to track an order number
+     * @param order_no
+     * @return
+     */
     private static String getOrderDetailsFromOrder(String order_no) {
-        String query = "SELECT order_status FROM users NATURAL JOIN users_orders NATURAL JOIN orders WHERE orders.order_no = ?";
+        String query = "SELECT order_status " +
+                       "FROM users NATURAL JOIN users_orders NATURAL JOIN orders " +
+                       "WHERE orders.order_no = ? AND users_orders.account_no = ?";
         try {
             PreparedStatement pstmt = c.prepareStatement(query);
             pstmt.setLong(1, Long.parseLong(order_no));
+            pstmt.setInt(2, userAccountNumber);
             ResultSet rs = pstmt.executeQuery();
             if (rs.next()){
                 String status = rs.getString("order_status");
@@ -516,5 +795,133 @@ public class LookInABookApp {
             e.printStackTrace();
         }
         return "Not Found";
+    }
+
+    /**
+     * Create the user's order from checkout information
+     */
+    private static void insertUserOrder() {
+        String query = "SELECT \"insert_order\" (?)";
+        try {
+            PreparedStatement pstmt = c.prepareStatement(query);
+            pstmt.setInt(1, userAccountNumber);
+            int results = pstmt.executeUpdate();
+            return;
+        } catch (SQLException e) {
+            System.out.println("Failed to create the order");
+            e.printStackTrace();
+            checkoutLoop();
+
+        }
+    }
+
+    /**
+     * Copy a user's shipping/billing to their order(s)
+     */
+    private static void copyUserAddressesToOrderInformation() {
+        String query = "SELECT \"copy_user_addresses_to_order\" (?)";
+        try {
+            PreparedStatement pstmt = c.prepareStatement(query);
+            pstmt.setInt(1, userAccountNumber);
+            int results = pstmt.executeUpdate();
+            return;
+        } catch (SQLException e) {
+            System.out.println("Failed to copy the user's billing and shipping to their order(s) with UAN: " + userAccountNumber);
+            e.printStackTrace();
+            checkoutLoop();
+
+        }
+    }
+
+    /**
+     * Delete a user's checkout after an order and an orders shipping/billing is entered
+     */
+    private static void deleteCheckoutItems() {
+        String query = "SELECT \"delete_checkout\" (?)";
+        try {
+            PreparedStatement pstmt = c.prepareStatement(query);
+            pstmt.setInt(1, userAccountNumber);
+            int results = pstmt.executeUpdate();
+            return;
+        } catch (SQLException e) {
+            System.out.println("Failed to delete the user's checkout with UAN: " + userAccountNumber);
+            e.printStackTrace();
+            checkoutLoop();
+
+        }
+    }
+
+    /**
+     * Get Order Full Details From the Created Order
+     * @return
+     */
+    private static ArrayList<OrderDetails> getOrderDetailsFromCreatedOrder() {
+        String query = "SELECT order_no, serial_no, book_name, author_name, genre, no_pages, sales_price" +
+                       "FROM book natural join book_ISBN natural join book_author natural join author natural join checkout natural join users_orders natural join orders " +
+                       "WHERE checkout.account_no = ? AND users_orders.account_no = ?";
+        try {
+            PreparedStatement pstmt = c.prepareStatement(query);
+            pstmt.setInt(1, userAccountNumber);
+            ResultSet rs = pstmt.executeQuery();
+            ArrayList<OrderDetails> orders = new ArrayList<OrderDetails>();
+            if (rs.next()){
+                Long order_no = rs.getLong("order_no");
+                Long serial_no = rs.getLong("serial_no");
+                String b_name = rs.getString("book_name");
+                String a_name = rs.getString("author_name");
+                String genre = rs.getString("genre");
+                int no_pages = rs.getInt("no_pages");
+                float price = rs.getFloat("sales_price");
+                orders.add(new OrderDetails(order_no, serial_no, b_name, a_name, genre, no_pages, price));
+            }
+            return orders;
+        } catch (SQLException e) {
+            System.out.println("Error when finding that orders for user account number: " + userAccountNumber);
+            e.printStackTrace();
+        }
+        return null;
+    }
+
+    /**
+     * Insert the information for the Order Shipping and Billing
+     * @param orderBilling
+     * @param orderShipping
+     * @return
+     */
+    private static boolean insertOrderShippingAndBilling(Billing_Address orderBilling, Shipping_Address orderShipping) {
+        String shipping_query = "select insert_order_shipping (?, ?, ?, ?, ?, ?)";
+        String billing_query = "select insert_order_billing (?, ?, ?, ?, ?, ?, ?)";
+        ResultSet results = null;
+        try {
+            PreparedStatement pstmt = c.prepareStatement(shipping_query);
+            pstmt.setInt(1, userAccountNumber);
+            pstmt.setString(2, orderShipping.postal_code);
+            pstmt.setString(3, orderShipping.street);
+            pstmt.setString(4, orderShipping.city);
+            pstmt.setString(5, orderShipping.province);
+            pstmt.setString(6, orderShipping.country);
+            results = pstmt.executeQuery();
+        } catch (SQLException e) {
+            e.printStackTrace();
+            System.out.println("Insert into order shipping failed");
+            return false;
+        }
+
+        try {
+            PreparedStatement pstmt = c.prepareStatement(billing_query);
+            pstmt.setInt(1, userAccountNumber);
+            pstmt.setString(2, orderBilling.postal_code);
+            pstmt.setString(3, orderBilling.street);
+            pstmt.setString(4, orderBilling.city);
+            pstmt.setString(5, orderBilling.province);
+            pstmt.setString(6, orderBilling.country);
+            pstmt.setLong(7, orderBilling.credit_card);
+            results = pstmt.executeQuery();
+            return true;
+        } catch (SQLException e) {
+            e.printStackTrace();
+            System.out.println("Insert into order billing failed");
+            return false;
+        }
     }
 }
