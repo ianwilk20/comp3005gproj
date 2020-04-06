@@ -1,11 +1,11 @@
 public class OrderDetails {
-    private Long order_no;
-    private Long serial_no;
-    private String book_name;
-    private String author_name;
-    private String genre;
-    private int no_pages;
-    private float sales_price;
+    public Long order_no;
+    public Long serial_no;
+    public String book_name;
+    public String author_name;
+    public String genre;
+    public int no_pages;
+    public float sales_price;
 
     public OrderDetails(Long o_no, Long s_no, String b_name, String a_name, String g, int num, float price) {
         order_no = o_no;
