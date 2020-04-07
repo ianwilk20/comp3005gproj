@@ -16,7 +16,7 @@ public class LookInABookApp {
     public static void main(String[] args) {
         String url = "jdbc:postgresql://localhost:5432/OnlineBookstore";
         String user = "postgres";
-        String password = "rootPass";
+        String password = "Whale987654";
 
       try {
          Class.forName("org.postgresql.Driver");
@@ -141,16 +141,15 @@ public class LookInABookApp {
             String creditCard = uInput.nextLine();
             Long creditParsed = null;
             try {
-                Long.parseLong(creditCard);
+                creditParsed = Long.parseLong(creditCard);
             } catch (NumberFormatException nfe){
                 System.out.println("Invalid order number");
                 createUserBilling();
             }
 
-
             if (street.isEmpty() || street == null || city.isEmpty() || city == null || postal_code.isEmpty() || postal_code == null ||
                 province.isEmpty() || province == null || country.isEmpty() || country == null || creditParsed == null) {
-                System.out.println("Invalid entry or entire(s) please try again!");
+                System.out.println("Invalid entry or entries please try again!");
                 continue;
             } else {
                 //int result = insertIntoAddressAndPostalAddress(street, city, postal_code, province, country);
@@ -197,7 +196,7 @@ public class LookInABookApp {
 
              if (address.isEmpty() || address == null || city.isEmpty() || city == null || postal_code.isEmpty() || postal_code == null ||
                      province.isEmpty() || province == null || country.isEmpty() || country == null || !country.equals("Canada")) {
-                 System.out.println("Invalid entry or entirie(s) please try again!");
+                 System.out.println("Invalid entry or entries please try again!");
                  continue;
              } else {
                  boolean result = insertUserShippingIntoDB(address, city, postal_code, province, country);
@@ -311,7 +310,7 @@ public class LookInABookApp {
                 int serial_no = uInput.nextInt();
                 boolean found = false;
                 for (BookDetails bd : selectedBooks){
-                    if (bd.serial_no.equals(serial_no)){
+                    if (bd.serial_no == serial_no){
                         insertBookToCheckout(bd.serial_no);
                         found = true;
                         break;
@@ -421,7 +420,7 @@ public class LookInABookApp {
             String creditCard = uInput.nextLine();
             Long creditParsed = null;
             try {
-                Long.parseLong(creditCard);
+                creditParsed = Long.parseLong(creditCard);
             } catch (NumberFormatException nfe){
                 System.out.println("Invalid order number");
                 getBillingForOrder();
@@ -430,7 +429,7 @@ public class LookInABookApp {
 
             if (street.isEmpty() || street == null || city.isEmpty() || city == null || postal_code.isEmpty() || postal_code == null ||
                     province.isEmpty() || province == null || country.isEmpty() || country == null || creditParsed == null) {
-                System.out.println("Invalid entry or entire(s) please try again!");
+                System.out.println("Invalid entry or entries please try again!");
                 continue;
             } else {
                 return new Billing_Address(postal_code, street, city, province, country, creditParsed);
@@ -459,7 +458,7 @@ public class LookInABookApp {
 
             if (street.isEmpty() || street == null || city.isEmpty() || city == null || postal_code.isEmpty() || postal_code == null ||
                     province.isEmpty() || province == null || country.isEmpty() || country == null) {
-                System.out.println("Invalid entry or entire(s) please try again!");
+                System.out.println("Invalid entry or entries please try again!");
                 continue;
             } else {
                 return new Shipping_Address(postal_code, street, city, province, country);
@@ -539,7 +538,7 @@ public class LookInABookApp {
         String order_no = uInput.nextLine();
         Long order_number;
         try {
-            Long.parseLong(order_no);
+            order_number = Long.parseLong(order_no);
         } catch (NumberFormatException nfe){
             System.out.println("Invalid order number");
             orderSearch();
@@ -725,7 +724,7 @@ public class LookInABookApp {
             PreparedStatement pstmt = c.prepareStatement(query);
             pstmt.setString(1, user_name);
             pstmt.setString(2, email);
-            int results = pstmt.executeUpdate();
+            pstmt.executeUpdate();
         } catch (SQLException e) {
             e.printStackTrace();
         }
@@ -805,16 +804,15 @@ public class LookInABookApp {
      * @param country
      * @return
      */
-    private static int insertIntoAddressAndPostalAddress(String street, String city, String postal_code, String province, String country){
+    private static void insertIntoAddressAndPostalAddress(String street, String city, String postal_code, String province, String country){
         String addressQuery = "INSERT into address (postal_code, street, city) values (?, ?, ?)";
         String postalAddressQuery = "INSERT into postal_address (postal_code, province, country) values (?, ?, ?)";
-        int results = 0;
         try {
             PreparedStatement pstmt = c.prepareStatement(postalAddressQuery);
             pstmt.setString(1, postal_code);
             pstmt.setString(2, province);
             pstmt.setString(3, country);
-            results = pstmt.executeUpdate();
+            pstmt.executeUpdate();
         } catch (SQLException e) {
             e.printStackTrace();
             createUserBilling();
@@ -825,12 +823,11 @@ public class LookInABookApp {
             pstmt.setString(1, postal_code);
             pstmt.setString(2, street);
             pstmt.setString(3, city);
-            results = pstmt.executeUpdate();
+            pstmt.executeUpdate();
         } catch (SQLException e) {
             e.printStackTrace();
             createUserBilling();
         }
-        return results;
     }
 
     /**
@@ -843,8 +840,7 @@ public class LookInABookApp {
             PreparedStatement pstmt = c.prepareStatement(query);
             pstmt.setInt(1, userAccountNumber);
             pstmt.setInt(2, userAccountNumber);
-            int results = pstmt.executeUpdate();
-            return;
+            pstmt.executeUpdate();
         } catch (SQLException e) {
             System.out.println("Failed to insert information from Users_Billing to Users_Shipping");
             e.printStackTrace();
@@ -886,13 +882,11 @@ public class LookInABookApp {
         try {
             PreparedStatement pstmt = c.prepareStatement(query);
             pstmt.setInt(1, userAccountNumber);
-            int results = pstmt.executeUpdate();
-            return;
+            pstmt.executeQuery();
         } catch (SQLException e) {
             System.out.println("Failed to create the order");
             e.printStackTrace();
             checkoutLoop();
-
         }
     }
 
@@ -904,8 +898,7 @@ public class LookInABookApp {
         try {
             PreparedStatement pstmt = c.prepareStatement(query);
             pstmt.setInt(1, userAccountNumber);
-            int results = pstmt.executeUpdate();
-            return;
+            pstmt.executeUpdate();
         } catch (SQLException e) {
             System.out.println("Failed to copy the user's billing and shipping to their order(s) with UAN: " + userAccountNumber);
             e.printStackTrace();
@@ -922,8 +915,7 @@ public class LookInABookApp {
         try {
             PreparedStatement pstmt = c.prepareStatement(query);
             pstmt.setInt(1, userAccountNumber);
-            int results = pstmt.executeUpdate();
-            return;
+            pstmt.executeUpdate();
         } catch (SQLException e) {
             System.out.println("Failed to delete the user's checkout with UAN: " + userAccountNumber);
             e.printStackTrace();
