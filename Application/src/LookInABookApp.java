@@ -16,7 +16,7 @@ public class LookInABookApp {
     public static void main(String[] args) {
         String url = "jdbc:postgresql://localhost:5432/OnlineBookstore";
         String user = "postgres";
-        String password = "Whale987654";
+        String password = "rootPass";
 
       try {
          Class.forName("org.postgresql.Driver");
@@ -218,17 +218,20 @@ public class LookInABookApp {
         Scanner uInput = new Scanner(System.in);
         System.out.println("--------------------------------------------------");
         System.out.println("What would you like to do");
-        System.out.println(" (1) - Search for a book \t (2) - Track an existing order");
+        System.out.println(" (1) - Search for a book \t (2) - Track an existing order \t (3) - Show Cart");
         System.out.print("\n\t \tSelection: ");
         Integer selection = uInput.nextInt();
         if (selection == 1){
             bookSearch();
         } else if (selection == 2){
             orderSearch();
+        } else if (selection == 3) {
+            cartLoop();
         } else {
             userLoop();
         }
     }
+
 
     /**
      * Directs User to the Book Search
@@ -254,11 +257,16 @@ public class LookInABookApp {
                         checkoutOrSearchLoop(returnedBooks);
                     } else {
                         System.out.println("The Book: '" + book_name + "' could not be found.");
-                        System.out.print("Would you like to (1) Try Again \t (2) Return to Search: ");
+                        System.out.println("Would you like to (1) Try Again \t (2) Return to Search \t (3) Return to User Main Menu ");
+                        System.out.print("\n\t \tSelection: ");
                         Integer choice = uInput.nextInt();
                         if (choice == 1){
                             continue;
                         } else if (choice == 2){
+                            bookSearch();
+                        } else if (choice == 3){
+                            userLoop();
+                        } else {
                             bookSearch();
                         }
                     }
@@ -275,11 +283,16 @@ public class LookInABookApp {
                         checkoutOrSearchLoop(returnedBooks);
                     } else {
                         System.out.println("The author: '" + author_name + "' could not be found.");
-                        System.out.print("Would you like to (1) Try Again \t (2) Return to Search: ");
+                        System.out.println("Would you like to (1) Try Again \t (2) Return to Search \t (3) Return to User Main Menu ");
+                        System.out.print("\n\t \tSelection: ");
                         Integer choice = uInput.nextInt();
                         if (choice == 1){
                             continue;
                         } else if (choice == 2){
+                            bookSearch();
+                        } else if (choice == 3){
+                            userLoop();
+                        } else {
                             bookSearch();
                         }
                     }
@@ -296,12 +309,16 @@ public class LookInABookApp {
                         checkoutOrSearchLoop(returnedBooks);
                     } else {
                         System.out.println("The ISBN: '" + ISBN + "' could not be found.");
-                        System.out.println("Would you like to (1) Try Again \t (2) Return to Search ");
+                        System.out.println("Would you like to (1) Try Again \t (2) Return to Search \t (3) Return to User Main Menu ");
                         System.out.print("\n\t \tSelection: ");
                         Integer choice = uInput.nextInt();
                         if (choice == 1){
                             continue;
                         } else if (choice == 2){
+                            bookSearch();
+                        } else if (choice == 3){
+                            userLoop();
+                        } else {
                             bookSearch();
                         }
                     }
@@ -318,12 +335,16 @@ public class LookInABookApp {
                         checkoutOrSearchLoop(returnedBooks);
                     } else {
                         System.out.println("The genre: '" + genre + "' could not be found or no books could be found with that genre");
-                        System.out.print("Would you like to (1) Try Again \t (2) Return to Search ");
+                        System.out.println("Would you like to (1) Try Again \t (2) Return to Search \t (3) Return to User Main Menu ");
                         System.out.print("\n\t \tSelection: ");
                         Integer choice = uInput.nextInt();
                         if (choice == 1){
-
+                            continue;
                         } else if (choice == 2){
+                            bookSearch();
+                        } else if (choice == 3){
+                            userLoop();
+                        } else {
                             bookSearch();
                         }
                     }
@@ -340,12 +361,16 @@ public class LookInABookApp {
                         checkoutOrSearchLoop(returnedBooks);
                     } else {
                         System.out.println("The publisher with name: '" + pub + "' could not be found or no publishers exist");
-                        System.out.print("Would you like to (1) Try Again \t (2) Return to Search ");
+                        System.out.println("Would you like to (1) Try Again \t (2) Return to Search \t (3) Return to User Main Menu ");
                         System.out.print("\n\t \tSelection: ");
                         Integer choice = uInput.nextInt();
                         if (choice == 1){
-
+                            continue;
                         } else if (choice == 2){
+                            bookSearch();
+                        } else if (choice == 3){
+                            userLoop();
+                        } else {
                             bookSearch();
                         }
                     }
@@ -390,6 +415,38 @@ public class LookInABookApp {
         }
     }
 
+    private static void cartLoop() {
+        Scanner uInput = new Scanner(System.in);
+        System.out.println("--------------------------------------------------");
+        System.out.println("Your Cart"); //print cart
+        ArrayList<BookDetails> booksInCart = getUsersCart();
+        if (booksInCart != null && booksInCart.size() > 0){
+            printBookDetailsForCart(booksInCart);
+            System.out.println("What would you like to do?");
+            System.out.println("(1) - Search for a Book \t (2) - Place Order");
+            int choice = uInput.nextInt();
+            while (true) {
+                if (choice == 1) {
+                    bookSearch();
+                } else if (choice == 2) {
+                    checkoutLoop();
+                }
+            }
+        } else {
+            System.out.println("EMPTY!!");
+            System.out.println("What would you like to do?");
+            System.out.println("(1) - Search for a Book");
+            int choice = uInput.nextInt();
+            while (true) {
+                if (choice == 1) {
+                    bookSearch();
+                } else if (choice == 2) {
+                    continue;
+                }
+            }
+        }
+    }
+
     /**
      * Menu to link back to search or to place an order
      */
@@ -403,6 +460,7 @@ public class LookInABookApp {
         }
         System.out.println("What would you like to do?");
         System.out.println("(1) - New Search \t (2) - Place Order");
+        System.out.print("Your Selection: ");
         int choice = uInput.nextInt();
         while (true){
             if (choice == 1){
@@ -429,7 +487,7 @@ public class LookInABookApp {
             if (choice == 1){
                 insertUserOrder();
                 copyUserAddressesToOrderInformation();
-                System.out.println("| -- Order Created -- |");
+                System.out.println("| -------- Order Created -------- |");
                 ArrayList<OrderDetails> returnedOrdersCreated = getOrderDetailsFromCreatedOrder();
                 if (returnedOrdersCreated != null && returnedOrdersCreated.size() > 0){
                     printOrderDetails(returnedOrdersCreated);
@@ -437,12 +495,13 @@ public class LookInABookApp {
                     System.out.println("Error when retrieving order details ");
                 }
                 deleteCheckoutItems();
+                System.out.println("--------------------------------------------------");
             } else if (choice == 2) {
                 Billing_Address orderBilling = getBillingForOrder();
                 Shipping_Address orderShipping = getShippingForOrder();
                 insertUserOrder();
                 insertOrderShippingAndBilling(orderBilling, orderShipping);
-                System.out.println("| -- Order Created -- |");
+                System.out.println("| -------- Order Created -------- |");
                 System.out.println("Order Number - Serial Number - Book Name - Book Author - Genre - Number of Pages - Sales Price");
                 ArrayList<OrderDetails> returnedOrdersCreated = getOrderDetailsFromCreatedOrder();
                 if (returnedOrdersCreated != null && returnedOrdersCreated.size() > 0){
@@ -452,10 +511,12 @@ public class LookInABookApp {
                 } else {
                     System.out.println("Error when retrieving order details ");
                 }
+                System.out.println("--------------------------------------------------");
                 deleteCheckoutItems();
             } else {
                 checkoutLoop();
             }
+            userLoop();
         }
     }
 
@@ -674,7 +735,7 @@ public class LookInABookApp {
     private static ArrayList<BookDetails> getBooksByName(String book_name){
         String query = "SELECT distinct on (Book.isbn) isbn, serial_no, book_name, author_name, genre, pub_name, no_pages, sales_price " +
                        "from Book natural join Book_ISBN natural join Book_Author natural join Author natural join Publisher " +
-                       "WHERE LOWER(book_name) LIKE LOWER(?) and Book.sold = false";
+                       "WHERE LOWER(book_name) LIKE LOWER(?) and Book.sold = false and Book.serial_no NOT IN (SELECT serial_no FROM checkout)";
         Statement stmt = null;
         ArrayList<BookDetails> booksReturned = new ArrayList<BookDetails>();
         try {
@@ -711,7 +772,7 @@ public class LookInABookApp {
     private static ArrayList<BookDetails> getBooksByAuthorName(String author_name){
         String query = "SELECT distinct on (Book.isbn) isbn, serial_no, book_name, author_name, genre, pub_name, no_pages, sales_price " +
                         "from Book natural join Book_ISBN natural join Book_Author natural join Author natural join Publisher " +
-                        "WHERE LOWER(author_name) LIKE LOWER(?) and Book.sold = false";
+                        "WHERE LOWER(author_name) LIKE LOWER(?) and Book.sold = false and Book.serial_no NOT IN (SELECT serial_no FROM checkout)";
         Statement stmt = null;
         ArrayList<BookDetails> booksReturned = new ArrayList<BookDetails>();
         try {
@@ -748,7 +809,7 @@ public class LookInABookApp {
     private static ArrayList<BookDetails> getBooksByISBN(String isbn){
         String query = "SELECT distinct on (Book.isbn) isbn, serial_no, book_name, author_name, genre, pub_name, no_pages, sales_price " +
                        "FROM Book natural join Book_ISBN natural join Book_Author natural join Author natural join Publisher " +
-                       "WHERE isbn::text LIKE ? and Book.sold = false";
+                       "WHERE isbn::text LIKE ? and Book.sold = false and Book.serial_no NOT IN (SELECT serial_no FROM checkout)";
         Statement stmt = null;
         ArrayList<BookDetails> booksReturned = new ArrayList<BookDetails>();
         try {
@@ -785,7 +846,7 @@ public class LookInABookApp {
     private static ArrayList<BookDetails> getBooksByGenre(String s_genre){
         String query = "SELECT distinct on (Book.isbn) isbn, serial_no, book_name, author_name, genre, pub_name, no_pages, sales_price " +
                 "FROM Book natural join Book_ISBN natural join Book_Author natural join Author natural join Publisher " +
-                "WHERE LOWER(genre) LIKE LOWER(?) and Book.sold = false";
+                "WHERE LOWER(genre) LIKE LOWER(?) and Book.sold = false and Book.serial_no NOT IN (SELECT serial_no FROM checkout)";
         Statement stmt = null;
         ArrayList<BookDetails> booksReturned = new ArrayList<BookDetails>();
         try {
@@ -822,7 +883,7 @@ public class LookInABookApp {
     private static ArrayList<BookDetails> getBooksByPublisher(String s_pub){
         String query = "SELECT distinct on (Book.isbn) isbn, serial_no, book_name, author_name, genre, pub_name, no_pages, sales_price " +
                 "FROM Book natural join Book_ISBN natural join Book_Author natural join Author natural join Publisher " +
-                "WHERE LOWER(pub_name) LIKE LOWER(?) and Book.sold = false";
+                "WHERE LOWER(pub_name) LIKE LOWER(?) and Book.sold = false and Book.serial_no NOT IN (SELECT serial_no FROM checkout)";
         Statement stmt = null;
         ArrayList<BookDetails> booksReturned = new ArrayList<BookDetails>();
         try {
@@ -1039,7 +1100,7 @@ public class LookInABookApp {
         try {
             PreparedStatement pstmt = c.prepareStatement(query);
             pstmt.setInt(1, userAccountNumber);
-            pstmt.executeUpdate();
+            pstmt.execute();
         } catch (SQLException e) {
             System.out.println("Failed to copy the user's billing and shipping to their order(s) with UAN: " + userAccountNumber);
             e.printStackTrace();
@@ -1056,7 +1117,7 @@ public class LookInABookApp {
         try {
             PreparedStatement pstmt = c.prepareStatement(query);
             pstmt.setInt(1, userAccountNumber);
-            pstmt.executeUpdate();
+            pstmt.execute();
         } catch (SQLException e) {
             System.out.println("Failed to delete the user's checkout with UAN: " + userAccountNumber);
             e.printStackTrace();
@@ -1070,15 +1131,16 @@ public class LookInABookApp {
      * @return
      */
     private static ArrayList<OrderDetails> getOrderDetailsFromCreatedOrder() {
-        String query = "SELECT order_no, serial_no, book_name, author_name, genre, no_pages, sales_price" +
-                       "FROM book natural join book_ISBN natural join book_author natural join author natural join checkout natural join users_orders natural join orders " +
+        String query = "SELECT order_no, serial_no, book_name, author_name, genre, no_pages, sales_price " +
+                       "FROM book natural join book_isbn natural join book_author natural join author natural join checkout natural join users_orders natural join orders " +
                        "WHERE checkout.account_no = ? AND users_orders.account_no = ?";
         try {
             PreparedStatement pstmt = c.prepareStatement(query);
             pstmt.setInt(1, userAccountNumber);
+            pstmt.setInt(2, userAccountNumber);
             ResultSet rs = pstmt.executeQuery();
             ArrayList<OrderDetails> orders = new ArrayList<OrderDetails>();
-            if (rs.next()){
+            while (rs.next()){
                 Long order_no = rs.getLong("order_no");
                 Long serial_no = rs.getLong("serial_no");
                 String b_name = rs.getString("book_name");

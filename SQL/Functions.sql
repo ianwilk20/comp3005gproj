@@ -96,12 +96,12 @@ BEGIN
 
 INSERT INTO orders_billing(order_no, postal_code, street, city, credit_card)
 SELECT order_no, postal_code, street, city, credit_card 
-FROM users_orders NATURAL JOIN checkout NATURAL JOIN users_billing 
+FROM users_orders NATURAL JOIN checkout NATURAL JOIN users_billing natural join orders
 WHERE users_orders.account_no = checkout.account_no AND users_orders.account_no = u_account_no;
 
 INSERT INTO orders_shipping(order_no, postal_code, street, city)
 SELECT order_no, postal_code, street, city
-FROM users_orders NATURAL JOIN checkout NATURAL JOIN users_shipping
+FROM users_orders NATURAL JOIN checkout NATURAL JOIN users_shipping natural join orders
 WHERE users_orders.account_no = checkout.account_no AND users_orders.account_no = u_account_no;
 							   
 
