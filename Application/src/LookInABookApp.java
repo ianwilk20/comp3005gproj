@@ -665,6 +665,8 @@ public class LookInABookApp {
         return "";
     }
 
+    /* Book Searching Functions */
+
     /**
      * Get Book By Name
      * @param book_name
@@ -849,6 +851,9 @@ public class LookInABookApp {
         }
         return booksReturned;
     }
+
+
+
 
     /**
      * Add User To DB
