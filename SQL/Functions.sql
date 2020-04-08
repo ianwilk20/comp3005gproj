@@ -2,6 +2,10 @@
 
 -- USER --
 
+
+-- @Purpose Insert a user's billing details into the DB - Must first insert into postal_address then address 
+-- (assumming the addresses don't already exist) and finally insert into the user's billing
+-- @Returns n/a
 CREATE OR REPLACE FUNCTION insert_users_billing (IN u_acc_no BIGINT, IN u_postal_co VARCHAR, IN u_street VARCHAR, IN u_city VARCHAR, 
 									  IN u_credit_card BIGINT, IN u_prov VARCHAR, IN u_country VARCHAR) RETURNS void AS $$
 BEGIN
@@ -35,6 +39,9 @@ END;
 $$ LANGUAGE plpgsql;
 
 
+-- @Purpose Insert a user's shipping details into the DB - Must first insert into postal_address then address 
+-- (assumming the addresses don't already exist) and finally insert into the user's shipping
+-- @Returns n/a
 CREATE OR REPLACE FUNCTION insert_users_shipping (IN u_acc_no BIGINT, IN u_postal_co VARCHAR, IN u_street VARCHAR, IN u_city VARCHAR, 
 												  IN u_prov VARCHAR, IN u_country VARCHAR) RETURNS void AS $$
 BEGIN
@@ -66,6 +73,11 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
+
+-- @Purpose Inserts a users order - Inserts a users order into their users_orders table with
+-- the order specified by order just created - Updates the book the user orders to make the sold flag be true
+-- in order for that serial_no for that book to no longer be sold
+-- @Returns n/a
 CREATE OR REPLACE FUNCTION insert_order (IN u_account_no BIGINT) RETURNS void AS $$
 BEGIN
 	
@@ -91,6 +103,9 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
+-- @Purpose Inserts a user's billing address into the order's billing address -
+-- Inserts a user's shipping address into the order's shipping address
+-- @Returns n/a
 CREATE OR REPLACE FUNCTION copy_user_addresses_to_order (IN u_account_no BIGINT) RETURNS void AS $$
 BEGIN
 
@@ -108,7 +123,8 @@ WHERE users_orders.account_no = checkout.account_no AND users_orders.account_no 
 END;
 $$ LANGUAGE plpgsql;
 
-
+-- @Purpose Clears the user's checkout who just made an order 
+-- @Returns n/a
 CREATE OR REPLACE FUNCTION delete_checkout (IN u_account_no BIGINT) RETURNS void AS $$
 BEGIN
 
@@ -120,6 +136,11 @@ DELETE FROM checkout
 END;
 $$ LANGUAGE plpgsql;
 
+
+-- @Purpose Insert a order's shipping details into the DB - Must first insert into postal_address then address 
+-- (assumming those addresses don't already exist) and finally insert the address information into order shipping for all of the orders
+-- that were created as a result of a user placing that order
+-- @Returns n/a
 CREATE OR REPLACE FUNCTION insert_order_shipping (IN u_account_no BIGINT, IN u_postal_co VARCHAR, IN u_street VARCHAR, IN u_city VARCHAR, 
 												  IN u_prov VARCHAR, IN u_country VARCHAR) RETURNS void AS $$
 
@@ -154,6 +175,11 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
+
+-- @Purpose Insert a order's billing details into the DB - Must first insert into postal_address then address 
+-- (assumming those addresses don't already exist) and finally insert the address information into order billing for all of the orders
+-- that were created as a result of a user placing that order
+-- @Returns n/a
 CREATE OR REPLACE FUNCTION insert_order_billing (IN u_account_no BIGINT, IN u_postal_co VARCHAR, IN u_street VARCHAR, IN u_city VARCHAR, 
 												  IN u_prov VARCHAR, IN u_country VARCHAR, IN u_credit_card BIGINT) RETURNS void AS $$
 
@@ -190,7 +216,7 @@ $$ LANGUAGE plpgsql;
 
 -- OWNER --
 
-
+-- Insert an owner into the db
 CREATE OR REPLACE FUNCTION addOwnerToDB (IN u_email VARCHAR, IN u_threshold INT, IN u_p_number NUMERIC) RETURNS integer AS $$
 BEGIN			   
 	INSERT INTO Owners
@@ -212,6 +238,7 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
+-- insert an author into the db
 create or replace function addAuthorToDB (in u_author_name varchar, in u_serial_no numeric) returns void as $$
 begin			   	
 	if not exists (select * from Author 
@@ -229,6 +256,7 @@ begin
 end;
 $$ language plpgsql;
 
+-- insert a book into the db
 create or replace function addBookToDB (in u_serial_no numeric, in u_book_name varchar, in owner_id int) returns void as $$
 begin			   	
 						   
@@ -243,6 +271,7 @@ begin
 end;
 $$ language plpgsql;
 
+-- insert a book's isbn into the db
 create or replace function addBook_ISBNToDB (in u_ISBN numeric, in u_book_name varchar, in u_genre varchar,
 											in u_no_pages int, in u_cost_price real, in u_sales_price real,
 											in u_percent_to_pub real, in u_pub_name varchar) returns void as $$
@@ -255,6 +284,7 @@ begin
 end;
 $$ language plpgsql;
 
+-- insert a publisher into the db
 create or replace function addPublisherToDB (in u_bank_account numeric, in u_pub_name varchar, in u_email varchar, in u_p_number numeric,
 											 in u_postal_code varchar, in u_prov varchar, in u_country varchar, 
 											 in u_street varchar, in u_city varchar) returns void as $$
@@ -280,6 +310,9 @@ begin
 end;
 $$ language plpgsql;
 
+-- for each book that has been sold, insert 
+-- "a number of books equal to how many books were sold in the previous month" <- that many
+-- new books into the db if the remaining quantity of books is less than a given threshold
 create or replace function trigfun() returns trigger as $$
 declare
 	counter integer := 0;
