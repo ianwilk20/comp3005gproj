@@ -434,16 +434,7 @@ public class LookInABookApp {
             }
         } else {
             System.out.println("EMPTY!!");
-            System.out.println("What would you like to do?");
-            System.out.println("(1) - Search for a Book");
-            int choice = uInput.nextInt();
-            while (true) {
-                if (choice == 1) {
-                    bookSearch();
-                } else if (choice == 2) {
-                    continue;
-                }
-            }
+            userLoop();
         }
     }
 
@@ -502,17 +493,14 @@ public class LookInABookApp {
                 insertUserOrder();
                 insertOrderShippingAndBilling(orderBilling, orderShipping);
                 System.out.println("| -------- Order Created -------- |");
-                System.out.println("Order Number - Serial Number - Book Name - Book Author - Genre - Number of Pages - Sales Price");
                 ArrayList<OrderDetails> returnedOrdersCreated = getOrderDetailsFromCreatedOrder();
                 if (returnedOrdersCreated != null && returnedOrdersCreated.size() > 0){
-                    for (OrderDetails order: returnedOrdersCreated){
-                        order.toString();
-                    }
+                    printOrderDetails(returnedOrdersCreated);
                 } else {
                     System.out.println("Error when retrieving order details ");
                 }
-                System.out.println("--------------------------------------------------");
                 deleteCheckoutItems();
+                System.out.println("--------------------------------------------------");
             } else {
                 checkoutLoop();
             }
@@ -567,7 +555,7 @@ public class LookInABookApp {
     private static Shipping_Address getShippingForOrder() {
         Scanner uInput = new Scanner(System.in);
         while (true){
-            System.out.println("| -------  Order Billing Information ------- |");
+            System.out.println("| -------  Order Shipping Information ------- |");
             System.out.print("Enter your street address: ");
             String street = uInput.nextLine();
             System.out.print("Enter your city: ");
