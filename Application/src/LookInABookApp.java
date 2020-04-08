@@ -16,7 +16,7 @@ public class LookInABookApp {
     public static void main(String[] args) {
         String url = "jdbc:postgresql://localhost:5432/OnlineBookstore";
         String user = "postgres";
-        String password = "rootPass";
+        String password = "Whale987654";
 
       try {
          Class.forName("org.postgresql.Driver");
