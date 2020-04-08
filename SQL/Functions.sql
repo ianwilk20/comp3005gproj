@@ -300,9 +300,20 @@ begin
 				counter := counter + 1;
 				insert into Book
 				values (default, new.ISBN, default);
+				
+				insert into Inventory
+				select new.serial_no, owner_id 
+				from Book natural join Inventory
+				where serial_no = new.serial_no;
+
+				insert into Book_Author
+				select author_id, new.serial_no
+				from Book natural join Book_Author
+				where Book.serial_no = new.serial_no;
+
 			End loop;							 
 		end if;
 		return new;
 end;
 $$
-LANGUAGE 'plpgsql';
+LANGUAGE plpgsql;
