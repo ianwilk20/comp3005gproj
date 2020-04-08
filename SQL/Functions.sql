@@ -279,3 +279,30 @@ begin
 		
 end;
 $$ language plpgsql;
+
+create or replace function trigfun() returns trigger as $$
+declare
+	counter integer := 0;
+begin
+		if ((select count(serial_no) from Book natural join Book_ISBN natural join Inventory 
+			 where ISBN = new.ISBN and owner_id = (select owner_id 
+												   from Book natural join Inventory 
+												   where serial_no = new.serial_no) 
+			 and sold = false)<(select threshold from Owners natural join Inventory natural join Book 
+								where serial_no = new.serial_no))
+		then
+			Loop
+				exit when counter = (select count(serial_no) 
+									 from Orders natural join Book 
+									 where purchase_date >= date_trunc('month', current_date - interval '1' month) and 
+									 purchase_date < date_trunc('month', current_date) and 
+									 ISBN = new.ISBN);
+				counter := counter + 1;
+				insert into Book
+				values (default, new.ISBN, default);
+			End loop;							 
+		end if;
+		return new;
+end;
+$$
+LANGUAGE 'plpgsql';
