@@ -16,7 +16,7 @@ public class LookInABookApp {
     public static void main(String[] args) {
         String url = "jdbc:postgresql://localhost:5432/OnlineBookstore";
         String user = "postgres";
-        String password = "Whale987654";
+        String password = "rootPass";
 
       try {
          Class.forName("org.postgresql.Driver");
@@ -679,8 +679,10 @@ public class LookInABookApp {
             PreparedStatement pstmt = c.prepareStatement(query);
             pstmt.setString(1, email);
             ResultSet rs = pstmt.executeQuery();
-            rs.next();
-            Integer account_no = rs.getInt("account_no");
+            Integer account_no = null;
+            if(rs.next()){
+                account_no = rs.getInt("account_no");
+            }
             if (account_no != null && account_no >= 0){
                 userAccountNumber = account_no;
                 return true;
@@ -702,11 +704,12 @@ public class LookInABookApp {
         try {
             stmt = c.createStatement();
             ResultSet rs = stmt.executeQuery(query);
-            rs.next();
-            String acc_no = rs.getString("account_no");
-            String users = rs.getString("user_name");
-            String email = rs.getString("email");
-            return acc_no + " | " + users + " | " + email;
+            if(rs.next()){
+                String acc_no = rs.getString("account_no");
+                String users = rs.getString("user_name");
+                String email = rs.getString("email");
+                return acc_no + " | " + users + " | " + email;
+            }
         } catch (SQLException e) {
             e.printStackTrace();
         }
@@ -909,7 +912,7 @@ public class LookInABookApp {
      * @param email
      */
     private static void insertUserIntoDB(String user_name, String email) {
-        String query = "INSERT into users values(default, ?, ?)";
+        String query = "INSERT into users(account_no, user_name, email) values(default, ?, ?)";
         try {
             PreparedStatement pstmt = c.prepareStatement(query);
             pstmt.setString(1, user_name);
@@ -1459,8 +1462,10 @@ public class LookInABookApp {
             PreparedStatement pstmt = c.prepareStatement(query);
             pstmt.setInt(1, owner_id);
             ResultSet rs = pstmt.executeQuery();
-            rs.next();
-            int count = rs.getInt(1);
+            int count = 0;
+            if(rs.next()){
+                count = rs.getInt(1);
+            }
             if (count > 0) {
                 return true;
             } else {
